@@ -411,34 +411,54 @@ if(g_Config.m_ClBlackout &&
                     FrontTile == TILE_LFREEZE;
             };
 
-            const int Restrictions = pCollision->GetMoveRestrictions(Pos);
+auto GetDirectionScore = [&](int Direction) {
+    int Score = 0;
 
-            const vec2 ForwardPos = Pos + vec2(InputDirection * 32.0f, 0.0f);
-            const vec2 BackwardPos = Pos + vec2(-InputDirection * 32.0f, 0.0f);
+    for(int Step = 1; Step <= 3; Step++)
+    {
+        const vec2 CheckPos = Pos + vec2(Direction * 32.0f * Step, 0.0f);
 
-            const bool FreezeAhead =
-                IsFreezeAt(ForwardPos + vec2(0.0f, -16.0f)) ||
-                IsFreezeAt(ForwardPos) ||
-                IsFreezeAt(ForwardPos + vec2(0.0f, 16.0f));
+        const int Restrictions = pCollision->GetMoveRestrictions(CheckPos);
 
-            const bool WallAhead = Restrictions &
-                (InputDirection > 0 ? CANTMOVE_RIGHT : CANTMOVE_LEFT);
+        if(Restrictions & (Direction > 0 ? CANTMOVE_RIGHT : CANTMOVE_LEFT))
+            Score += 1000;
 
-            const bool FreezeBehind =
-                IsFreezeAt(BackwardPos + vec2(0.0f, -16.0f)) ||
-                IsFreezeAt(BackwardPos) ||
-                IsFreezeAt(BackwardPos + vec2(0.0f, 16.0f));
+        if(IsFreezeAt(CheckPos + vec2(0.0f, -16.0f)))
+            Score += 100 / Step;
 
-            const bool WallBehind = Restrictions &
-                (InputDirection > 0 ? CANTMOVE_LEFT : CANTMOVE_RIGHT);
+        if(IsFreezeAt(CheckPos))
+            Score += 150 / Step;
 
-            if((FreezeAhead || WallAhead) && !FreezeBehind && !WallBehind)
-            {
-                m_aInputData[g_Config.m_ClDummy].m_Direction = -InputDirection;
-            }
-        }
+        if(IsFreezeAt(CheckPos + vec2(0.0f, 16.0f)))
+            Score += 100 / Step;
     }
+
+    return Score;
+};
+
+const vec2 ForwardPos = Pos + vec2(InputDirection * 32.0f, 0.0f);
+
+const bool FreezeAhead =
+    IsFreezeAt(ForwardPos + vec2(0.0f, -16.0f)) ||
+    IsFreezeAt(ForwardPos) ||
+    IsFreezeAt(ForwardPos + vec2(0.0f, 16.0f));
+
+const int CurrentRestrictions = pCollision->GetMoveRestrictions(Pos);
+
+const bool WallAhead = CurrentRestrictions &
+    (InputDirection > 0 ? CANTMOVE_RIGHT : CANTMOVE_LEFT);
+
+if(FreezeAhead || WallAhead)
+{
+    const int LeftScore = GetDirectionScore(-1);
+    const int RightScore = GetDirectionScore(1);
+
+    if(LeftScore < RightScore && LeftScore < 1000)
+        m_aInputData[g_Config.m_ClDummy].m_Direction = -1;
+    else if(RightScore < LeftScore && RightScore < 1000)
+        m_aInputData[g_Config.m_ClDummy].m_Direction = 1;
 }
+
 
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
