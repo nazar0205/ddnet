@@ -369,7 +369,45 @@ int CControls::SnapInput(int *pData)
 			m_aInputData[g_Config.m_ClDummy].m_TargetX = (int)(std::sin(t * 3) * 100.0f);
 			m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)(std::cos(t * 3) * 100.0f);
 		}
+// Blackout Frost Avoid - detection test
+if(g_Config.m_ClBlackout &&
+    g_Config.m_ClBlackoutFrostAvoid &&
+    GameClient()->m_Snap.m_pLocalCharacter)
+{
+    const CCollision *pCollision = GameClient()->Collision();
 
+    if(pCollision->GetWidth() > 0 &&
+        pCollision->GetHeight() > 0 &&
+        pCollision->GameLayer())
+    {
+        const vec2 Pos(
+            GameClient()->m_Snap.m_pLocalCharacter->m_X,
+            GameClient()->m_Snap.m_pLocalCharacter->m_Y);
+
+        if(Pos.x >= 0 && Pos.y >= 0 &&
+            Pos.x < pCollision->GetWidth() * 32.0f &&
+            Pos.y < pCollision->GetHeight() * 32.0f)
+        {
+            const int Index = pCollision->GetPureMapIndex(Pos);
+
+            const int GameTile = pCollision->GetTileIndex(Index);
+            const int FrontTile = pCollision->GetFrontTileIndex(Index);
+
+            static int s_LastGameTile = -1;
+            static int s_LastFrontTile = -1;
+
+            if(GameTile != s_LastGameTile ||
+                FrontTile != s_LastFrontTile)
+            {
+                dbg_msg("blackout", "Tile detected: game=%d front=%d",
+                    GameTile, FrontTile);
+
+                s_LastGameTile = GameTile;
+                s_LastFrontTile = FrontTile;
+            }
+        }
+    }
+}
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Jump != m_aLastData[g_Config.m_ClDummy].m_Jump;
