@@ -460,6 +460,9 @@ else if(RightScore < LeftScore && RightScore < 1000)
 else if(LeftScore == RightScore && LeftScore < 1000)
     m_aInputData[g_Config.m_ClDummy].m_Direction = -InputDirection;
 }
+			    }
+	}
+}
 
 
 		// check if we need to send input
