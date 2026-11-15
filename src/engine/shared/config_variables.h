@@ -12,6 +12,12 @@
 #endif
 
 // client
+
+// Blackout
+MACRO_CONFIG_INT(ClBlackout, cl_blackout, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Blackout")
+MACRO_CONFIG_INT(ClBlackoutCustomHook, cl_blackout_custom_hook, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Blackout Custom Hook")
+MACRO_CONFIG_INT(ClBlackoutBalanceBot, cl_blackout_balance_bot, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Blackout Balance Bot")
+MACRO_CONFIG_INT(ClBlackoutFrostAvoid, cl_blackout_frost_avoid, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Blackout Frost Avoid")
 MACRO_CONFIG_INT(ClPredict, cl_predict, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict client movements")
 MACRO_CONFIG_INT(ClPredictDummy, cl_predict_dummy, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict dummy movements")
 MACRO_CONFIG_INT(ClPredictEvents, cl_predict_events, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict events (sounds, particles)")
