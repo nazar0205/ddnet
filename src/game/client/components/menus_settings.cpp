@@ -50,8 +50,10 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Graphics"),
 		Localize("Sound"),
 		Localize("DDNet"),
-		Localize("Assets"),
-		Localize("Credits")};
+Localize("Assets"),
+Localize("Credits"),
+Localize("Blackout")
+};
 	static CButtonContainer s_aTabButtons[SETTINGS_LENGTH];
 
 	for(int i = 0; i < SETTINGS_LENGTH; i++)
