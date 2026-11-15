@@ -1,6 +1,7 @@
 
 #include "menus.h"
 
+#include <game/client/ui.h>
 #include <game/localization.h>
 
 void CMenus::RenderSettingsBlackout(CUIRect MainView)
@@ -13,7 +14,7 @@ void CMenus::RenderSettingsBlackout(CUIRect MainView)
 	CUIRect Row;
 
 	MainView.HSplitTop(35.0f, &Row, &MainView);
-	UI()->DoLabel(&Row, "BLACKOUT", 24.0f, TEXTALIGN_LEFT);
+	Ui()->DoLabel(&Row, "BLACKOUT", 24.0f, TEXTALIGN_LEFT);
 
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 
