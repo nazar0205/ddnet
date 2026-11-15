@@ -6,11 +6,6 @@
 
 void CMenus::RenderSettingsBlackout(CUIRect MainView)
 {
-	static int s_Enabled = 1;
-	static int s_CustomHook = 1;
-	static int s_BalanceBot = 0;
-	static int s_FrostAvoid = 0;
-
 	CUIRect Row;
 
 	MainView.HSplitTop(35.0f, &Row, &MainView);
@@ -19,20 +14,20 @@ void CMenus::RenderSettingsBlackout(CUIRect MainView)
 	MainView.HSplitTop(10.0f, nullptr, &MainView);
 
 	MainView.HSplitTop(30.0f, &Row, &MainView);
-	if(DoButton_CheckBox(&s_Enabled, Localize("Enable Blackout"), s_Enabled, &Row))
-		s_Enabled ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClBlackout, Localize("Enable Blackout"), g_Config.m_ClBlackout, &Row))
+		g_Config.m_ClBlackout ^= 1;
 
 	MainView.HSplitTop(8.0f, nullptr, &MainView);
 
 	MainView.HSplitTop(30.0f, &Row, &MainView);
-	if(DoButton_CheckBox(&s_CustomHook, Localize("Custom Hook"), s_CustomHook, &Row))
-		s_CustomHook ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutCustomHook, Localize("Custom Hook"), g_Config.m_ClBlackoutCustomHook, &Row))
+		g_Config.m_ClBlackoutCustomHook ^= 1;
 
 	MainView.HSplitTop(30.0f, &Row, &MainView);
-	if(DoButton_CheckBox(&s_BalanceBot, Localize("Balance Bot"), s_BalanceBot, &Row))
-		s_BalanceBot ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBalanceBot, Localize("Balance Bot"), g_Config.m_ClBlackoutBalanceBot, &Row))
+		g_Config.m_ClBlackoutBalanceBot ^= 1;
 
 	MainView.HSplitTop(30.0f, &Row, &MainView);
-	if(DoButton_CheckBox(&s_FrostAvoid, Localize("Frost Avoid"), s_FrostAvoid, &Row))
-		s_FrostAvoid ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutFrostAvoid, Localize("Frost Avoid"), g_Config.m_ClBlackoutFrostAvoid, &Row))
+		g_Config.m_ClBlackoutFrostAvoid ^= 1;
 }
