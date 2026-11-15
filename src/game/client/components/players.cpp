@@ -553,9 +553,33 @@ void CPlayers::RenderHook(
 		s_aHookChainRenderInfo[HookChainCount].m_Scale = 1;
 		s_aHookChainRenderInfo[HookChainCount].m_Rotation = angle(Dir) + pi;
 	}
-	Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookChain);
-	Graphics()->SetColor(1.0f, 0.08f, 0.12f, Alpha);
-	Graphics()->RenderQuadContainerAsSpriteMultiple(m_WeaponEmoteQuadContainerIndex, QuadOffset, HookChainCount, s_aHookChainRenderInfo);
+Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookChain);
+
+// BLACKOUT: red glow layer
+Graphics()->SetColor(1.0f, 0.02f, 0.04f, 0.22f * Alpha);
+
+for(int i = 0; i < HookChainCount; ++i)
+	s_aHookChainRenderInfo[i].m_Scale = 2.2f;
+
+Graphics()->RenderQuadContainerAsSpriteMultiple(
+	m_WeaponEmoteQuadContainerIndex,
+	QuadOffset,
+	HookChainCount,
+	s_aHookChainRenderInfo
+);
+
+// BLACKOUT: sharp red chain
+Graphics()->SetColor(1.0f, 0.08f, 0.12f, Alpha);
+
+for(int i = 0; i < HookChainCount; ++i)
+	s_aHookChainRenderInfo[i].m_Scale = 1.0f;
+
+Graphics()->RenderQuadContainerAsSpriteMultiple(
+	m_WeaponEmoteQuadContainerIndex,
+	QuadOffset,
+	HookChainCount,
+	s_aHookChainRenderInfo
+);
 
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
