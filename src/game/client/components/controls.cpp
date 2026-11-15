@@ -396,7 +396,7 @@ if(g_Config.m_ClBlackout &&
                 if(CheckPos.x < 0 || CheckPos.y < 0 ||
                     CheckPos.x >= pCollision->GetWidth() * 32.0f ||
                     CheckPos.y >= pCollision->GetHeight() * 32.0f)
-                    return false;
+                    return true;
 
                 const int Index = pCollision->GetPureMapIndex(CheckPos);
 
