@@ -370,6 +370,7 @@ int CControls::SnapInput(int *pData)
 			m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)(std::cos(t * 3) * 100.0f);
 		}
 // Blackout Frost Avoid - detection test
+// Blackout Frost Avoid - nearby freeze detection
 if(g_Config.m_ClBlackout &&
     g_Config.m_ClBlackoutFrostAvoid &&
     GameClient()->m_Snap.m_pLocalCharacter)
@@ -384,27 +385,44 @@ if(g_Config.m_ClBlackout &&
             GameClient()->m_Snap.m_pLocalCharacter->m_X,
             GameClient()->m_Snap.m_pLocalCharacter->m_Y);
 
-        if(Pos.x >= 0 && Pos.y >= 0 &&
-            Pos.x < pCollision->GetWidth() * 32.0f &&
-            Pos.y < pCollision->GetHeight() * 32.0f)
+        bool FreezeNearby = false;
+
+        for(int x = -1; x <= 1; x++)
         {
-            const int Index = pCollision->GetPureMapIndex(Pos);
-
-            const int GameTile = pCollision->GetTileIndex(Index);
-            const int FrontTile = pCollision->GetFrontTileIndex(Index);
-
-            static int s_LastGameTile = -1;
-            static int s_LastFrontTile = -1;
-
-            if(GameTile != s_LastGameTile ||
-                FrontTile != s_LastFrontTile)
+            for(int y = -1; y <= 1; y++)
             {
-                dbg_msg("blackout", "Tile detected: game=%d front=%d",
-                    GameTile, FrontTile);
+                const vec2 CheckPos = Pos + vec2(x * 32.0f, y * 32.0f);
 
-                s_LastGameTile = GameTile;
-                s_LastFrontTile = FrontTile;
+                if(CheckPos.x < 0 || CheckPos.y < 0 ||
+                    CheckPos.x >= pCollision->GetWidth() * 32.0f ||
+                    CheckPos.y >= pCollision->GetHeight() * 32.0f)
+                    continue;
+
+                const int Index = pCollision->GetPureMapIndex(CheckPos);
+
+                const int GameTile = pCollision->GetTileIndex(Index);
+                const int FrontTile = pCollision->GetFrontTileIndex(Index);
+
+                if(GameTile == TILE_FREEZE ||
+                    GameTile == TILE_DFREEZE ||
+                    GameTile == TILE_LFREEZE ||
+                    FrontTile == TILE_FREEZE ||
+                    FrontTile == TILE_DFREEZE ||
+                    FrontTile == TILE_LFREEZE)
+                {
+                    FreezeNearby = true;
+                }
             }
+        }
+
+        static bool s_LastFreezeNearby = false;
+
+        if(FreezeNearby != s_LastFreezeNearby)
+        {
+            dbg_msg("blackout", "Freeze nearby: %s",
+                FreezeNearby ? "YES" : "NO");
+
+            s_LastFreezeNearby = FreezeNearby;
         }
     }
 }
