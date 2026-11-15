@@ -578,6 +578,8 @@ protected:
 
 	// found in menus_settings_credits.cpp
 	void RenderSettingsCredits(CUIRect MainView);
+// found in menus_settings_blackout.cpp
+void RenderSettingsBlackout(CUIRect MainView);
 
 	// found in menus_settings_ddnet.cpp
 	void RenderSettingsDDNet(CUIRect MainView);
