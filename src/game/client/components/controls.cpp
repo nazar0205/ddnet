@@ -370,7 +370,8 @@ int CControls::SnapInput(int *pData)
 			m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)(std::cos(t * 3) * 100.0f);
 		}
 // Blackout Frost Avoid - detection test
-// Blackout Frost Avoid - nearby freeze detection
+
+// Blackout Frost Avoid - horizontal avoidance
 if(g_Config.m_ClBlackout &&
     g_Config.m_ClBlackoutFrostAvoid &&
     GameClient()->m_Snap.m_pLocalCharacter)
@@ -385,47 +386,60 @@ if(g_Config.m_ClBlackout &&
             GameClient()->m_Snap.m_pLocalCharacter->m_X,
             GameClient()->m_Snap.m_pLocalCharacter->m_Y);
 
-        bool FreezeNearby = false;
+        const int InputDirection =
+            m_aInputData[g_Config.m_ClDummy].m_Direction;
 
-        for(int x = -1; x <= 1; x++)
+        if(InputDirection != 0)
         {
-            for(int y = -1; y <= 1; y++)
-            {
-                const vec2 CheckPos = Pos + vec2(x * 32.0f, y * 32.0f);
-
+            // Check freeze tiles at a position.
+            auto IsFreezeAt = [&](vec2 CheckPos) {
                 if(CheckPos.x < 0 || CheckPos.y < 0 ||
                     CheckPos.x >= pCollision->GetWidth() * 32.0f ||
                     CheckPos.y >= pCollision->GetHeight() * 32.0f)
-                    continue;
+                    return false;
 
                 const int Index = pCollision->GetPureMapIndex(CheckPos);
 
                 const int GameTile = pCollision->GetTileIndex(Index);
                 const int FrontTile = pCollision->GetFrontTileIndex(Index);
 
-                if(GameTile == TILE_FREEZE ||
+                return GameTile == TILE_FREEZE ||
                     GameTile == TILE_DFREEZE ||
                     GameTile == TILE_LFREEZE ||
                     FrontTile == TILE_FREEZE ||
                     FrontTile == TILE_DFREEZE ||
-                    FrontTile == TILE_LFREEZE)
-                {
-                    FreezeNearby = true;
-                }
+                    FrontTile == TILE_LFREEZE;
+            };
+
+            const int Restrictions = pCollision->GetMoveRestrictions(Pos);
+
+            const vec2 ForwardPos = Pos + vec2(InputDirection * 32.0f, 0.0f);
+            const vec2 BackwardPos = Pos + vec2(-InputDirection * 32.0f, 0.0f);
+
+            const bool FreezeAhead =
+                IsFreezeAt(ForwardPos + vec2(0.0f, -16.0f)) ||
+                IsFreezeAt(ForwardPos) ||
+                IsFreezeAt(ForwardPos + vec2(0.0f, 16.0f));
+
+            const bool WallAhead = Restrictions &
+                (InputDirection > 0 ? CANTMOVE_RIGHT : CANTMOVE_LEFT);
+
+            const bool FreezeBehind =
+                IsFreezeAt(BackwardPos + vec2(0.0f, -16.0f)) ||
+                IsFreezeAt(BackwardPos) ||
+                IsFreezeAt(BackwardPos + vec2(0.0f, 16.0f));
+
+            const bool WallBehind = Restrictions &
+                (InputDirection > 0 ? CANTMOVE_LEFT : CANTMOVE_RIGHT);
+
+            if((FreezeAhead || WallAhead) && !FreezeBehind && !WallBehind)
+            {
+                m_aInputData[g_Config.m_ClDummy].m_Direction = -InputDirection;
             }
-        }
-
-        static bool s_LastFreezeNearby = false;
-
-        if(FreezeNearby != s_LastFreezeNearby)
-        {
-            dbg_msg("blackout", "Freeze nearby: %s",
-                FreezeNearby ? "YES" : "NO");
-
-            s_LastFreezeNearby = FreezeNearby;
         }
     }
 }
+
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Jump != m_aLastData[g_Config.m_ClDummy].m_Jump;
