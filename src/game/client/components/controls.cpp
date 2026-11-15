@@ -454,9 +454,11 @@ if(FreezeAhead || WallAhead)
     const int RightScore = GetDirectionScore(1);
 
     if(LeftScore < RightScore && LeftScore < 1000)
-        m_aInputData[g_Config.m_ClDummy].m_Direction = -1;
-    else if(RightScore < LeftScore && RightScore < 1000)
-        m_aInputData[g_Config.m_ClDummy].m_Direction = 1;
+    m_aInputData[g_Config.m_ClDummy].m_Direction = -1;
+else if(RightScore < LeftScore && RightScore < 1000)
+    m_aInputData[g_Config.m_ClDummy].m_Direction = 1;
+else if(LeftScore == RightScore && LeftScore < 1000)
+    m_aInputData[g_Config.m_ClDummy].m_Direction = -InputDirection;
 }
 
 
