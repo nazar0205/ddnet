@@ -535,54 +535,70 @@ void CPlayers::RenderHook(
 	vec2 Dir = normalize(Pos - HookPos);
 
 	Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookHead);
-	Graphics()->QuadsSetRotation(angle(Dir) + pi);
-	// render head
-	int QuadOffset = NUM_WEAPONS * 2 + 2;
-	Graphics()->SetColor(0.65f, 0.03f, 0.06f, Alpha);
-	Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, HookPos.x, HookPos.y);
+	
+const bool BlackoutHook = g_Config.m_ClBlackout && g_Config.m_ClBlackoutCustomHook;
 
-	// render chain
-	++QuadOffset;
-	static IGraphics::SRenderSpriteInfo s_aHookChainRenderInfo[1024];
-	int HookChainCount = 0;
-	for(float f = 24; f < d && HookChainCount < 1024; f += 24, ++HookChainCount)
-	{
-		vec2 p = HookPos + Dir * f;
-		s_aHookChainRenderInfo[HookChainCount].m_Pos[0] = p.x;
-		s_aHookChainRenderInfo[HookChainCount].m_Pos[1] = p.y;
-		s_aHookChainRenderInfo[HookChainCount].m_Scale = 1;
-		s_aHookChainRenderInfo[HookChainCount].m_Rotation = angle(Dir) + pi;
-	}
+Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookHead);
+Graphics()->QuadsSetRotation(angle(Dir) + pi);
+
+int QuadOffset = NUM_WEAPONS * 2 + 2;
+
+// Hook head
+if(BlackoutHook)
+	Graphics()->SetColor(0.65f, 0.03f, 0.06f, Alpha);
+else
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
+
+Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, HookPos.x, HookPos.y);
+
+// Hook chain
+++QuadOffset;
+static IGraphics::SRenderSpriteInfo s_aHookChainRenderInfo[1024];
+int HookChainCount = 0;
+
+for(float f = 24; f < d && HookChainCount < 1024; f += 24, ++HookChainCount)
+{
+	vec2 p = HookPos + Dir * f;
+	s_aHookChainRenderInfo[HookChainCount].m_Pos[0] = p.x;
+	s_aHookChainRenderInfo[HookChainCount].m_Pos[1] = p.y;
+	s_aHookChainRenderInfo[HookChainCount].m_Scale = 1.0f;
+	s_aHookChainRenderInfo[HookChainCount].m_Rotation = angle(Dir) + pi;
+}
+
 Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteHookChain);
 
-// BLACKOUT: red glow layer
-Graphics()->SetColor(1.0f, 0.02f, 0.04f, 0.22f * Alpha);
+if(BlackoutHook)
+{
+	// Red glow layer
+	Graphics()->SetColor(1.0f, 0.02f, 0.04f, 0.22f * Alpha);
 
-for(int i = 0; i < HookChainCount; ++i)
-	s_aHookChainRenderInfo[i].m_Scale = 2.2f;
+	for(int i = 0; i < HookChainCount; ++i)
+		s_aHookChainRenderInfo[i].m_Scale = 2.2f;
+
+	Graphics()->RenderQuadContainerAsSpriteMultiple(
+		m_WeaponEmoteQuadContainerIndex,
+		QuadOffset,
+		HookChainCount,
+		s_aHookChainRenderInfo);
+
+	// Sharp red chain
+	Graphics()->SetColor(1.0f, 0.08f, 0.12f, Alpha);
+
+	for(int i = 0; i < HookChainCount; ++i)
+		s_aHookChainRenderInfo[i].m_Scale = 1.0f;
+}
+else
+{
+	// Default DDNet chain
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);
+}
 
 Graphics()->RenderQuadContainerAsSpriteMultiple(
 	m_WeaponEmoteQuadContainerIndex,
 	QuadOffset,
 	HookChainCount,
-	s_aHookChainRenderInfo
-);
+	s_aHookChainRenderInfo);
 
-// BLACKOUT: sharp red chain
-Graphics()->SetColor(1.0f, 0.08f, 0.12f, Alpha);
-
-for(int i = 0; i < HookChainCount; ++i)
-	s_aHookChainRenderInfo[i].m_Scale = 1.0f;
-
-Graphics()->RenderQuadContainerAsSpriteMultiple(
-	m_WeaponEmoteQuadContainerIndex,
-	QuadOffset,
-	HookChainCount,
-	s_aHookChainRenderInfo
-);
-
-	Graphics()->QuadsSetRotation(0);
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	RenderHand(&RenderInfo, Position, normalize(HookPos - Pos), -pi / 2, vec2(20, 0), Alpha);
 }
