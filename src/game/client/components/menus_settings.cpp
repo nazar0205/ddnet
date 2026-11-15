@@ -117,10 +117,15 @@ Localize("Blackout")
 		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_ASSETS);
 		RenderSettingsAssets(MainView);
 	}
-	else if(g_Config.m_UiSettingsPage == SETTINGS_CREDITS)
+			else if(g_Config.m_UiSettingsPage == SETTINGS_CREDITS)
 	{
 		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_CREDITS);
 		RenderSettingsCredits(MainView);
+	}
+	else if(g_Config.m_UiSettingsPage == SETTINGS_BLACKOUT)
+	{
+		GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_SETTINGS_DDNET);
+		RenderSettingsBlackout(MainView);
 	}
 	else
 	{
