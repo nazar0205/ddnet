@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <algorithm>
 #include <antibot/antibot_data.h>
 
 #include <base/dbg.h>
@@ -44,8 +45,41 @@ CCollision::CCollision()
 }
 
 CCollision::~CCollision()
+void CCollision::CopyFrom(const CCollision &Other)
 {
+	if(this == &Other)
+		return;
+
 	Unload();
+
+	m_pLayers = Other.m_pLayers;
+	m_Width = Other.m_Width;
+	m_Height = Other.m_Height;
+
+	m_pTiles = Other.m_pTiles;
+	m_pTele = Other.m_pTele;
+	m_pSpeedup = Other.m_pSpeedup;
+	m_pFront = Other.m_pFront;
+	m_pSwitch = Other.m_pSwitch;
+	m_pTune = Other.m_pTune;
+
+	m_HighestSwitchNumber = Other.m_HighestSwitchNumber;
+	m_HasHookTeleIns = Other.m_HasHookTeleIns;
+
+	m_TeleIns = Other.m_TeleIns;
+	m_TeleOuts = Other.m_TeleOuts;
+	m_TeleCheckOuts = Other.m_TeleCheckOuts;
+	m_TeleOthers = Other.m_TeleOthers;
+
+	if(Other.m_pDoor)
+	{
+		const size_t Size = static_cast<size_t>(m_Width) * m_Height;
+		m_pDoor = new CDoorTile[Size];
+		std::copy_n(Other.m_pDoor, Size, m_pDoor);
+	}
+}
+{
+	
 }
 
 void CCollision::Init(class CLayers *pLayers)
