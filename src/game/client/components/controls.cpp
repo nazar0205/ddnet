@@ -374,7 +374,7 @@ int CControls::SnapInput(int *pData)
 // Blackout Frost Avoid: KRX Legit planner running on an isolated prediction world.
 		if(g_Config.m_ClBlackout && g_Config.m_ClBlackoutFrostAvoid &&
 			Client()->State() == IClient::STATE_ONLINE && GameClient()->m_Snap.m_pLocalCharacter &&
-			GameClient()->m_aLocalClientId >= 0)
+			GameClient()->m_LocalClientId >= 0)
 		{
 			const int ClientId = GameClient()->m_LocalClientId;
 			auto Simulation = OpenKrx::CreateClassicSimulation(GameClient()->m_PredictedWorld, ClientId,
