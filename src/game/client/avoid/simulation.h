@@ -27,6 +27,7 @@ public:
 	bool Valid() const override { return m_pLocal != nullptr; }
 	void Tick(const CNetObj_PlayerInput &Input) override;
 	bool Frozen() const override;
+    bool HookAttached() const override;
 	bool Dead() const override { return m_pLocal == nullptr; }
 	bool OnUnfreezeTile() const override;
 	vec2 Position() const override;
