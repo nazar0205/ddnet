@@ -66,7 +66,7 @@ namespace OpenKrx
 	std::vector<CBlatantPlan> CGameWorldSimulation::SearchCandidates(const std::vector<CNetObj_PlayerInput> &vInputs, int CheckTicks) const
 	{
 		// Every job owns collision/tuning, including worlds that spawn lasers.
-		if(!m_pJobEngine || m_pJobEngine->JobThreadCount() <= 0 || vInputs.size() < 2)
+		if(!m_pJobEngine || vInputs.size() < 2)
 			return IBlatantSimulation::SearchCandidates(vInputs, CheckTicks);
 
 		// 0x1402d30b0 waits for all independent greedy jobs, then selects by input
