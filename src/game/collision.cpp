@@ -37,7 +37,11 @@ vec2 ClampVel(int MoveRestriction, vec2 Vel)
 	}
 	return Vel;
 }
-
+CCollision::CCollision()
+{
+	m_pDoor = nullptr;
+	Unload();
+}
 
 CCollision::~CCollision()
 {
