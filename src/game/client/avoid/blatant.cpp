@@ -1,4 +1,5 @@
 #include "blatant.h"
+#include <game/gamecore.h>
 
 #include <algorithm>
 #include <cmath>
