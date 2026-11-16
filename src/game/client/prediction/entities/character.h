@@ -110,6 +110,7 @@ public:
 		}
 	}
 	int GetJumped() const { return m_Core.m_Jumped; }
+int LatestInputFire() const { return m_LatestInput.m_Fire; }
 	int GetAttackTick() const { return m_AttackTick; }
 	int GetStrongWeakId() const { return m_StrongWeakId; }
 
