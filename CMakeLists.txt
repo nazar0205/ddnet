@@ -2641,6 +2641,10 @@ if(CLIENT)
     animstate.cpp
     animstate.h
     assets.cpp
+    avoid/blatant.cpp
+    avoid/blatant.h
+    avoid/simulation.cpp
+    avoid/simulation.h
     component.cpp
     component.h
     components/background.cpp
