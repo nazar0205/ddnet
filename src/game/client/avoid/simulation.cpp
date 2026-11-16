@@ -249,8 +249,5 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 
 std::optional<vec2> OpenKrx::CGameWorldSimulation::DragAim()
 {
-	if(!m_pGameClient || !m_pLocal)
-		return std::nullopt;
-	return m_pGameClient->m_Aimbot.FindDragAim(m_World, m_LocalClientId, m_pGameClient,
-		m_pGameClient->m_Controls.m_aMousePos[g_Config.m_ClDummy]);
+	return std::nullopt;
 }
