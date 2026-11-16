@@ -727,6 +727,7 @@ void CGameWorld::CopyWorldIsolated(CGameWorld *pFrom, CCollision *pCollision, CT
 
 	m_GameTick = pFrom->m_GameTick;
 	m_pCollision = pCollision;
+	m_WorldConfig = pFrom->m_WorldConfig;
 	m_pTuningList = pTuningList;
 	m_pMapBugs = pFrom->m_pMapBugs;
 	m_Teams = pFrom->m_Teams;
