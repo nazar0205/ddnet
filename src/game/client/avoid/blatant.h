@@ -30,8 +30,9 @@ namespace OpenKrx
 		int m_Fov = 90;
 		int m_Segments = 5;
 		bool m_AimAssist = true;
-		bool m_AutoAim = false;
-		bool m_AutoDrag = false;
+bool m_AutoAim = false;
+bool m_AutoDrag = false;
+bool m_SafetyHookSearch = true;
 	};
 
 	struct CBlatantPlan;
