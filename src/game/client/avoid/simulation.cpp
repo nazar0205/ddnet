@@ -257,5 +257,16 @@ int CGameWorldSimulation::HookState() const
 
 std::optional<vec2> OpenKrx::CGameWorldSimulation::DragAim()
 {
-	return std::nullopt;
+	if(!m_pGameClient || !m_pLocal)
+		return std::nullopt;
+
+	const vec2 PhysicalMouse(
+		static_cast<float>(m_pLocal->Core()->m_Input.m_TargetX),
+		static_cast<float>(m_pLocal->Core()->m_Input.m_TargetY));
+
+	return m_pGameClient->m_Aimbot.FindDragAim(
+		m_World,
+		m_LocalClientId,
+		m_pGameClient,
+		PhysicalMouse);
 }
