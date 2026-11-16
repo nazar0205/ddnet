@@ -416,6 +416,16 @@ namespace OpenKrx
 			m_vLastPlan = Guard.m_vInputs;
 			return m_Settings.m_AutoDrag ? AutoDrag(World, Input, MouseAim) : Input;
 		}
+		// Emergency Jump: try jumping when the current trajectory is unsafe.
+CNetObj_PlayerInput JumpInput = Input;
+JumpInput.m_Jump = 1;
+
+if(CBlatantPlanner::ConstantLife(World, JumpInput, m_Settings.m_CheckTicks) == CBlatantPlan::SAFE)
+{
+    m_Diagnostic.m_pReason = "emergency_jump";
+    m_LastDecisionLife = CBlatantPlan::SAFE;
+    return JumpInput;
+}
 
 		if(m_Settings.m_Unfreeze)
 		{
