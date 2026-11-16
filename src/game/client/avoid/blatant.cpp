@@ -263,8 +263,10 @@ namespace OpenKrx
 			vResult.push_back(BestAuto);
 		return vResult;
 	}
+
+	std::vector<std::vector<CNetObj_PlayerInput>> CBlatantPlanner::CandidateGroups(const CNetObj_PlayerInput &Input) const
+	{
 		std::vector<std::vector<CNetObj_PlayerInput>> vGroups;
-		for(const auto &Group : ActionGroups(Input.m_Direction, Input.m_Hook != 0))
 		{
 			std::vector<CNetObj_PlayerInput> vGroup;
 			for(const auto &Next : Group)
