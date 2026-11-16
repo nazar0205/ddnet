@@ -30,4 +30,7 @@ void CMenus::RenderSettingsBlackout(CUIRect MainView)
 	MainView.HSplitTop(30.0f, &Row, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClBlackoutFrostAvoid, Localize("Frost Avoid"), g_Config.m_ClBlackoutFrostAvoid, &Row))
 		g_Config.m_ClBlackoutFrostAvoid ^= 1;
+	MainView.HSplitTop(30.0f, &Row, &MainView);
+if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantAvoid, Localize("Blatant Avoid"), g_Config.m_ClBlackoutBlatantAvoid, &Row))
+    g_Config.m_ClBlackoutBlatantAvoid ^= 1;
 }
