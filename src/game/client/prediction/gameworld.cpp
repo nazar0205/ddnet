@@ -718,6 +718,62 @@ void CGameWorld::CopyWorld(CGameWorld *pFrom)
 	m_IsValidCopy = true;
 }
 
+void CGameWorld::CopyWorldIsolated(CGameWorld *pFrom, CCollision *pCollision)
+{
+	if(!pFrom || pFrom == this || !pCollision)
+		return;
+
+	m_IsValidCopy = false;
+
+	m_GameTick = pFrom->m_GameTick;
+	m_pCollision = pCollision;
+	m_WorldConfig = pFrom->m_WorldConfig;
+	m_pTuningList = pFrom->m_pTuningList;
+	m_pMapBugs = pFrom->m_pMapBugs;
+	m_Teams = pFrom->m_Teams;
+	m_Core.m_vSwitchers = pFrom->m_Core.m_vSwitchers;
+	m_PredictedEvents = pFrom->m_PredictedEvents;
+
+	Clear();
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		m_apCharacters[i] = nullptr;
+		m_Core.m_apCharacters[i] = nullptr;
+	}
+
+	for(int Type = 0; Type < NUM_ENTTYPES; Type++)
+	{
+		for(CEntity *pEnt = pFrom->FindLast(Type); pEnt; pEnt = pEnt->TypePrev())
+		{
+			CEntity *pCopy = nullptr;
+
+			if(Type == ENTTYPE_PROJECTILE)
+				pCopy = new CProjectile(*static_cast<CProjectile *>(pEnt));
+			else if(Type == ENTTYPE_LASER)
+				pCopy = new CLaser(*static_cast<CLaser *>(pEnt));
+			else if(Type == ENTTYPE_DRAGGER)
+				pCopy = new CDragger(*static_cast<CDragger *>(pEnt));
+			else if(Type == ENTTYPE_CHARACTER)
+				pCopy = new CCharacter(*static_cast<CCharacter *>(pEnt));
+			else if(Type == ENTTYPE_PICKUP)
+				pCopy = new CPickup(*static_cast<CPickup *>(pEnt));
+			else if(Type == ENTTYPE_PLASMA)
+				pCopy = new CPlasma(*static_cast<CPlasma *>(pEnt));
+
+			if(pCopy)
+			{
+				pCopy->m_pParent = nullptr;
+				pCopy->m_pChild = nullptr;
+				InsertEntity(pCopy);
+			}
+		}
+	}
+
+	m_IsValidCopy = true;
+}
+
+
 CEntity *CGameWorld::FindMatch(int ObjId, int ObjType, const void *pObjData)
 {
 	switch(ObjType)
