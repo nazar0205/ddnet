@@ -268,15 +268,43 @@ if(Input.m_Hook == 1)
 
             pRehookWorld->Tick(RehookInput);
 
-            if(pRehookWorld->Frozen())
-            {
-                Life = 1;
-            }
-            else if(!pRehookWorld->HookAttached())
-            {
-                Life = 1;
-            }
-            else
+int RehookTicks = 2;
+
+while(pRehookWorld->HookState() == HOOK_FLYING &&
+    RehookTicks <= m_Settings.m_CheckTicks)
+{
+    AimAt(RehookInput, *Aim, pRehookWorld->Position());
+    pRehookWorld->Tick(RehookInput);
+    ++RehookTicks;
+
+    if(pRehookWorld->Frozen())
+        break;
+}
+
+const int Elapsed = RehookTicks - 1;
+
+if(pRehookWorld->Frozen())
+{
+    Life = Elapsed;
+}
+else if(!pRehookWorld->HookAttached())
+{
+    Life = Elapsed;
+}
+else
+{
+    const int Remaining = std::max(0, m_Settings.m_CheckTicks - Elapsed);
+    const auto FollowUp = Greedy(
+        *pRehookWorld,
+        RehookInput,
+        Remaining,
+        Aim,
+        true);
+
+    Life = FollowUp.m_Life == CBlatantPlan::SAFE
+        ? CBlatantPlan::SAFE
+        : FollowUp.m_Life + Elapsed;
+}
             {
                 // Predict the remaining movement after successful re-hooking.
                 const int Remaining = std::max(0, m_Settings.m_CheckTicks - 2);
