@@ -257,27 +257,26 @@ namespace OpenKrx
 				}
 			}
 		}
-				if(m_Settings.m_AimAssist)
+		if(m_Settings.m_AimAssist)
 			vResult.push_back(BestAssist);
 		if(m_Settings.m_AutoAim || m_Settings.m_SafetyHookSearch)
 			vResult.push_back(BestAuto);
 		return vResult;
 	}
 
-	std::vector<std::vector<CNetObj_PlayerInput>> CBlatantPlanner::CandidateGroups(const CNetObj_PlayerInput &Input) const
+		std::vector<std::vector<CNetObj_PlayerInput>> CBlatantPlanner::CandidateGroups(const CNetObj_PlayerInput &Input) const
 	{
 		std::vector<std::vector<CNetObj_PlayerInput>> vGroups;
+		for(const auto &Group : ActionGroups(Input.m_Direction, Input.m_Hook != 0))
 		{
 			std::vector<CNetObj_PlayerInput> vGroup;
 			for(const auto &Next : Group)
 				vGroup.push_back(Action(Input, Next[0], Next[1]));
-			// The shipped 2d2a90/2ccd60 path emits the complete groups. Its
-			// Direction/Hook settings have registration/UI references only and
-			// do not filter this candidate list (nor the greedy continuation).
 			if(!vGroup.empty())
 				vGroups.push_back(std::move(vGroup));
 		}
 		return vGroups;
+	}
 	}
 
 	std::vector<CNetObj_PlayerInput> CBlatantPlanner::Candidates(const IBlatantSimulation &World,
