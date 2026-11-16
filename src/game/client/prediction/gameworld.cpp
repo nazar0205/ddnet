@@ -721,15 +721,13 @@ void CGameWorld::CopyWorld(CGameWorld *pFrom)
 void CGameWorld::CopyWorldIsolated(CGameWorld *pFrom, CCollision *pCollision, CTuningParams *pTuningList)
 {
 	if(!pFrom || pFrom == this || !pCollision || !pTuningList)
-    return;
-		return;
+	return;
 
 	m_IsValidCopy = false;
 
 	m_GameTick = pFrom->m_GameTick;
 	m_pCollision = pCollision;
 	m_pTuningList = pTuningList;
-	m_pTuningList = pFrom->m_pTuningList;
 	m_pMapBugs = pFrom->m_pMapBugs;
 	m_Teams = pFrom->m_Teams;
 	m_Core.m_vSwitchers = pFrom->m_Core.m_vSwitchers;
