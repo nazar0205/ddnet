@@ -240,10 +240,60 @@ namespace OpenKrx
 				// Keep every original probe for adapters with possible side effects.
 				if(MayElide && AutoLife == CBlatantPlan::SAFE && !(Dot > AssistDot))
 					continue;
-				// 0x1402d1060 uses a literal 26 here, independently of Check Ticks.
-				const int Life = Input.m_Hook == 1
-    ? Greedy(World, Candidate, m_Settings.m_CheckTicks, Aim).m_Life
-    : ConstantLife(World, Candidate, 26);
+				// Re-hook sequence: release, hook the selected anchor, then predict survival.
+int Life;
+if(Input.m_Hook == 1)
+{
+    auto pRehookWorld = World.Clone();
+
+    if(!pRehookWorld->Valid())
+    {
+        Life = -5;
+    }
+    else
+    {
+        // Tick 1: release the current hook.
+        pRehookWorld->Tick(Candidate);
+
+        if(pRehookWorld->Frozen())
+        {
+            Life = 0;
+        }
+        else
+        {
+            // Tick 2: force a new hook toward the selected anchor.
+            CNetObj_PlayerInput RehookInput = Candidate;
+            RehookInput.m_Hook = 1;
+            AimAt(RehookInput, *Aim, pRehookWorld->Position());
+
+            pRehookWorld->Tick(RehookInput);
+
+            if(pRehookWorld->Frozen())
+            {
+                Life = 1;
+            }
+            else
+            {
+                // Predict the remaining movement after re-hooking.
+                const int Remaining = std::max(0, m_Settings.m_CheckTicks - 2);
+                const auto FollowUp = Greedy(
+                    *pRehookWorld,
+                    RehookInput,
+                    Remaining,
+                    Aim,
+                    true);
+
+                Life = FollowUp.m_Life == CBlatantPlan::SAFE
+                    ? CBlatantPlan::SAFE
+                    : FollowUp.m_Life + 2;
+            }
+        }
+    }
+}
+else
+{
+    Life = ConstantLife(World, Candidate, 26);
+}
 				if(Dot > AssistDot && Life > AssistLife)
 				{
 					AssistDot = Dot;
