@@ -466,7 +466,43 @@ else if(LeftScore == RightScore && LeftScore < 1000)
 	}
 }
 
+// Blackout Blatant Avoid
+if(g_Config.m_ClBlackout &&
+    g_Config.m_ClBlackoutBlatantAvoid &&
+    Client()->State() == IClient::STATE_ONLINE &&
+    GameClient()->m_Snap.m_pLocalCharacter &&
+    GameClient()->m_Snap.m_LocalClientId >= 0)
+{
+    static OpenKrx::CBlatantPlanner Planner;
 
+    const int ClientId = GameClient()->m_Snap.m_LocalClientId;
+
+    auto Simulation = OpenKrx::CreateSimulation(
+        GameClient(), ClientId, false);
+
+    if(Simulation && Simulation->Valid())
+    {
+        const CNetObj_PlayerInput OriginalInput =
+            m_aInputData[g_Config.m_ClDummy];
+
+        auto Adjusted = Planner.Decide(
+            *Simulation,
+            OriginalInput,
+            vec2(OriginalInput.m_TargetX, OriginalInput.m_TargetY));
+
+        if(Adjusted)
+        {
+            m_aInputData[g_Config.m_ClDummy] = *Adjusted;
+            m_aInputData[g_Config.m_ClDummy].m_Jump =
+                OriginalInput.m_Jump;
+        }
+    }
+}
+else
+{
+    static OpenKrx::CBlatantPlanner Planner;
+    Planner.Reset();
+}
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Jump != m_aLastData[g_Config.m_ClDummy].m_Jump;
