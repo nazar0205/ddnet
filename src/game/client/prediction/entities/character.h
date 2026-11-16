@@ -100,6 +100,7 @@ public:
 	void SetNinjaActivationTick(int ActivationTick) { m_Core.m_Ninja.m_ActivationTick = ActivationTick; }
 	void SetNinjaCurrentMoveTime(int CurrentMoveTime) { m_Core.m_Ninja.m_CurrentMoveTime = CurrentMoveTime; }
 	int GetCid() { return m_Id; }
+	const CNetObj_PlayerInput &DiagnosticCurrentInput() const { return m_Input; }
 	void SetInput(const CNetObj_PlayerInput *pNewInput)
 	{
 		m_LatestInput = m_Input = *pNewInput;
