@@ -17,10 +17,12 @@
 #include <game/client/components/menus.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/gameclient.h>
+#include <game/client/avoid/classic_agents.h>
 #include <game/collision.h>
 #include <game/localization.h>
 
 #include <algorithm>
+#include <cstdlib>
 
 CControls::CControls()
 {
@@ -369,101 +371,33 @@ int CControls::SnapInput(int *pData)
 			m_aInputData[g_Config.m_ClDummy].m_TargetX = (int)(std::sin(t * 3) * 100.0f);
 			m_aInputData[g_Config.m_ClDummy].m_TargetY = (int)(std::cos(t * 3) * 100.0f);
 		}
-// Blackout Frost Avoid - detection test
-
-// Blackout Frost Avoid - horizontal avoidance
-if(g_Config.m_ClBlackout &&
-    g_Config.m_ClBlackoutFrostAvoid &&
-    GameClient()->m_Snap.m_pLocalCharacter)
-{
-    const CCollision *pCollision = GameClient()->Collision();
-
-    if(pCollision->GetWidth() > 0 &&
-        pCollision->GetHeight() > 0 &&
-        pCollision->GameLayer())
-    {
-        const vec2 Pos(
-            GameClient()->m_Snap.m_pLocalCharacter->m_X,
-            GameClient()->m_Snap.m_pLocalCharacter->m_Y);
-
-        const int InputDirection =
-            m_aInputData[g_Config.m_ClDummy].m_Direction;
-
-        if(InputDirection != 0)
-        {
-            // Check freeze tiles at a position.
-            auto IsFreezeAt = [&](vec2 CheckPos) {
-                if(CheckPos.x < 0 || CheckPos.y < 0 ||
-                    CheckPos.x >= pCollision->GetWidth() * 32.0f ||
-                    CheckPos.y >= pCollision->GetHeight() * 32.0f)
-                    return true;
-
-                const int Index = pCollision->GetPureMapIndex(CheckPos);
-
-                const int GameTile = pCollision->GetTileIndex(Index);
-                const int FrontTile = pCollision->GetFrontTileIndex(Index);
-
-                return GameTile == TILE_FREEZE ||
-                    GameTile == TILE_DFREEZE ||
-                    GameTile == TILE_LFREEZE ||
-                    FrontTile == TILE_FREEZE ||
-                    FrontTile == TILE_DFREEZE ||
-                    FrontTile == TILE_LFREEZE;
-            };
-
-auto GetDirectionScore = [&](int Direction) {
-    int Score = 0;
-
-    for(int Step = 1; Step <= 3; Step++)
-    {
-        const vec2 CheckPos = Pos + vec2(Direction * 32.0f * Step, 0.0f);
-
-        const int Restrictions = pCollision->GetMoveRestrictions(CheckPos);
-
-        if(Restrictions & (Direction > 0 ? CANTMOVE_RIGHT : CANTMOVE_LEFT))
-            Score += 1000;
-
-        if(IsFreezeAt(CheckPos + vec2(0.0f, -16.0f)))
-            Score += 100 / Step;
-
-        if(IsFreezeAt(CheckPos))
-            Score += 150 / Step;
-
-        if(IsFreezeAt(CheckPos + vec2(0.0f, 16.0f)))
-            Score += 100 / Step;
-    }
-
-    return Score;
-};
-
-const vec2 ForwardPos = Pos + vec2(InputDirection * 32.0f, 0.0f);
-
-const bool FreezeAhead =
-    IsFreezeAt(ForwardPos + vec2(0.0f, -16.0f)) ||
-    IsFreezeAt(ForwardPos) ||
-    IsFreezeAt(ForwardPos + vec2(0.0f, 16.0f));
-
-const int CurrentRestrictions = pCollision->GetMoveRestrictions(Pos);
-
-const bool WallAhead = CurrentRestrictions &
-    (InputDirection > 0 ? CANTMOVE_RIGHT : CANTMOVE_LEFT);
-
-if(FreezeAhead || WallAhead)
-{
-    const int LeftScore = GetDirectionScore(-1);
-    const int RightScore = GetDirectionScore(1);
-
-    if(LeftScore < RightScore && LeftScore < 1000)
-    m_aInputData[g_Config.m_ClDummy].m_Direction = -1;
-else if(RightScore < LeftScore && RightScore < 1000)
-    m_aInputData[g_Config.m_ClDummy].m_Direction = 1;
-else if(LeftScore == RightScore && LeftScore < 1000)
-    m_aInputData[g_Config.m_ClDummy].m_Direction = -InputDirection;
-}
-			    }
-	}
-}
-
+// Blackout Frost Avoid: KRX Legit planner running on an isolated prediction world.
+		if(g_Config.m_ClBlackout && g_Config.m_ClBlackoutFrostAvoid &&
+			Client()->State() == IClient::STATE_ONLINE && GameClient()->m_Snap.m_pLocalCharacter &&
+			GameClient()->m_LocalClientId >= 0)
+		{
+			const int ClientId = GameClient()->m_LocalClientId;
+			auto Simulation = OpenKrx::CreateClassicSimulation(GameClient()->m_PredictedWorld, ClientId,
+				false, false, true, GameClient(), true);
+			if(Simulation && Simulation->Valid())
+			{
+				OpenKrx::CClassicSettings Settings;
+				Settings.m_CheckTicks = 6;
+				Settings.m_Iterations = 100;
+				const int Slot = g_Config.m_ClDummy;
+				const int PhysicalDirection = (m_aInputDirectionRight[Slot] != 0) - (m_aInputDirectionLeft[Slot] != 0);
+				const CTuningParams *pTune = &GameClient()->m_aTuning[Slot];
+				const vec2 Pos = GameClient()->m_LocalCharacterPos;
+				const bool Grounded = GameClient()->Collision()->CheckPoint(round_to_int(Pos.x + 14), round_to_int(Pos.y + 19)) ||
+					GameClient()->Collision()->CheckPoint(round_to_int(Pos.x - 14), round_to_int(Pos.y + 19));
+				const int Horizon = OpenKrx::CClassicPlanner::HookHorizon(GameClient()->m_PredictedChar.m_Vel,
+					pTune->m_Gravity, pTune->m_GroundControlAccel, pTune->m_AirControlAccel, Grounded);
+				auto Adjusted = OpenKrx::CClassicPlanner::Legit(*Simulation, m_aInputData[Slot],
+					PhysicalDirection, Horizon, Settings, [] { return (unsigned)std::rand(); });
+				if(Adjusted)
+					m_aInputData[Slot] = *Adjusted;
+			}
+		}
 
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
