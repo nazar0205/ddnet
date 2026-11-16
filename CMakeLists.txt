@@ -2693,6 +2693,9 @@ if(CLIENT)
     components/items.h
     components/key_binder.cpp
     components/key_binder.h
+    krx/aimbot.cpp
+    krx/aimbot.h
+    krx/parallel_prediction.h
     components/local_server.cpp
     components/local_server.h
     components/mapimages.cpp
