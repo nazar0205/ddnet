@@ -271,7 +271,8 @@ if(Input.m_Hook == 1)
 
 int Elapsed = 2;
 
-while(pRehookWorld->HookState() == HOOK_FLYING &&
+while(!pRehookWorld->Frozen() &&
+    pRehookWorld->HookState() == HOOK_FLYING &&
     Elapsed < m_Settings.m_CheckTicks)
 {
     AimAt(RehookInput, *Aim, pRehookWorld->Position());
