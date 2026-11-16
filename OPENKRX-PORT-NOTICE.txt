@@ -1,0 +1,8 @@
+Blackout Legit Avoid source port
+
+The classic planner and isolated simulation design are adapted from OpenKRX (eqsit/openkrx),
+distributed under the permissive Teeworlds/DDNet license in upstream license.txt.
+This port is modified for DDNet. Preserve this notice and the upstream license.
+
+This is an uncompiled source port. KRX-only death/teleport prediction extensions are disabled;
+the planner uses DDNet current predicted world and isolated collision/world copies.
