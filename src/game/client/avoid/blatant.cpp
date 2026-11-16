@@ -311,7 +311,7 @@ else
 }
 else
 {
-    Life = ConstantLife(World, Candidate, m_Settings.m_CheckTicks);;
+    Life = ConstantLife(World, Candidate, m_Settings.m_CheckTicks);
 }
 				if(Dot > AssistDot && Life > AssistLife)
 				{
