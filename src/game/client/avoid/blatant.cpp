@@ -169,7 +169,7 @@ namespace OpenKrx
 		const CNetObj_PlayerInput &Input, vec2 MouseAim) const
 	{
 		std::vector<CNetObj_PlayerInput> vResult;
-		if(!m_Settings.m_Aimbot)
+		if(!m_Settings.m_Aimbot && !m_Settings.m_SafetyHookSearch)
 		{
 			m_AssistPoint.reset();
 			m_AutoAimPoint.reset();
