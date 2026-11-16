@@ -38,13 +38,12 @@ vec2 ClampVel(int MoveRestriction, vec2 Vel)
 	return Vel;
 }
 
-CCollision::CCollision()
+
+CCollision::~CCollision()
 {
-	m_pDoor = nullptr;
 	Unload();
 }
 
-CCollision::~CCollision()
 void CCollision::CopyFrom(const CCollision &Other)
 {
 	if(this == &Other)
@@ -78,9 +77,7 @@ void CCollision::CopyFrom(const CCollision &Other)
 		std::copy_n(Other.m_pDoor, Size, m_pDoor);
 	}
 }
-{
-	
-}
+
 
 void CCollision::Init(class CLayers *pLayers)
 {
