@@ -175,8 +175,8 @@ namespace OpenKrx
 			m_AutoAimPoint.reset();
 			return vResult;
 		}
-		if(!World.Valid() || Input.m_Hook == 1)
-			return vResult;
+		if(!World.Valid())
+            return vResult;
 		// 0x1402d115c and 0x1402d11a4: both stored outputs and every survival
 		// probe use Hook=1, including aim assist. Scoring an unhooked input here
 		// makes the scan miss precisely the anchors that could rescue the tee.
