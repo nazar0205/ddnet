@@ -36,6 +36,7 @@ class CCollision
 public:
 	CCollision();
 	~CCollision();
+void CopyFrom(const CCollision &Other);
 
 	void Init(CLayers *pLayers);
 	void Unload();
