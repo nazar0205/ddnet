@@ -478,7 +478,7 @@ if(g_Config.m_ClBlackout &&
     const int ClientId = GameClient()->m_Snap.m_LocalClientId;
 
     auto Simulation = OpenKrx::CreateSimulation(
-        GameClient(), ClientId, false);
+    GameClient(), ClientId, true);
 
     if(Simulation && Simulation->Valid())
     {
