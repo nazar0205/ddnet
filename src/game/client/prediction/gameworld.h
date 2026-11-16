@@ -101,6 +101,7 @@ public:
 	void ResetDoorCollision();
 	void NetObjEnd();
 	void CopyWorld(CGameWorld *pFrom);
+void CopyWorldIsolated(CGameWorld *pFrom, CCollision *pCollision);
 	CEntity *FindMatch(int ObjId, int ObjType, const void *pObjData);
 	void Clear();
 
