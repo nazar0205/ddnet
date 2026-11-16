@@ -500,8 +500,7 @@ if(g_Config.m_ClBlackout &&
 }
 else
 {
-    static OpenKrx::CBlatantPlanner Planner;
-    Planner.Reset();
+    // Planner reset will be handled separately.
 }
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
