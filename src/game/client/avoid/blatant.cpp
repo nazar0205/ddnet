@@ -277,7 +277,6 @@ namespace OpenKrx
 		}
 		return vGroups;
 	}
-	}
 
 	std::vector<CNetObj_PlayerInput> CBlatantPlanner::Candidates(const IBlatantSimulation &World,
 		const CNetObj_PlayerInput &Input, vec2 MouseAim) const
