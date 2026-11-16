@@ -85,6 +85,11 @@ public:
 		bool m_NoWeakHookAndBounce;
 		bool m_PredictEvents;
 		bool m_OldLaser;
+		bool m_KrxPrediction = false;
+		bool m_KrxAvoidDeath = false;
+		bool m_KrxAvoidTeles = false;	
+		bool m_KrxExplosionStrengthValid = false;
+		float m_KrxExplosionStrength = 0.0f;
 	} m_WorldConfig;
 
 	bool m_IsValidCopy;
@@ -101,6 +106,9 @@ public:
 	void ResetDoorCollision();
 	void NetObjEnd();
 	void CopyWorld(CGameWorld *pFrom);
+	void CopyWorldIsolated(const CGameWorld *pFrom);
+	void RebindCollision(CCollision *pCollision);
+	void RebindTuning(CTuningParams *pTuningList) { m_pTuningList = pTuningList; }
 	CEntity *FindMatch(int ObjId, int ObjType, const void *pObjData);
 	void Clear();
 

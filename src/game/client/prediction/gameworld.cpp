@@ -718,6 +718,77 @@ void CGameWorld::CopyWorld(CGameWorld *pFrom)
 	m_IsValidCopy = true;
 }
 
+void CGameWorld::RebindCollision(CCollision *pCollision)
+{
+	m_pCollision = pCollision;
+	for(auto *pCharacter : m_apCharacters)
+		if(pCharacter)
+			pCharacter->SetCoreWorld(this);
+}
+
+void CGameWorld::CopyWorldIsolated(const CGameWorld *pFrom)
+{
+	if(!pFrom || pFrom == this)
+		return;
+	CGameWorld *pSource = const_cast<CGameWorld *>(pFrom);
+	m_IsValidCopy = false;
+	m_pParent = nullptr;
+	m_pChild = nullptr;
+
+	m_GameTick = pSource->m_GameTick;
+	m_pCollision = pSource->m_pCollision;
+	m_WorldConfig = pSource->m_WorldConfig;
+	m_pTuningList = pSource->m_pTuningList;
+	m_pMapBugs = pSource->m_pMapBugs;
+	m_Teams = pSource->m_Teams;
+	m_Core.m_vSwitchers = pSource->m_Core.m_vSwitchers;
+	m_PredictedEvents = pSource->m_PredictedEvents;
+	m_LocalClientId = pSource->m_LocalClientId;
+
+	// delete the previous entities
+	Clear();
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		m_apCharacters[i] = nullptr;
+		m_Core.m_apCharacters[i] = nullptr;
+	}
+	// copy and add the new entities, deliberately without parent/child links
+	for(int Type = 0; Type < NUM_ENTTYPES; Type++)
+	{
+		for(CEntity *pEnt = pSource->FindLast(Type); pEnt; pEnt = pEnt->TypePrev())
+		{
+			CEntity *pCopy = nullptr;
+			if(Type == ENTTYPE_PROJECTILE)
+			{
+				pCopy = new CProjectile(*((CProjectile *)pEnt));
+			}
+			else if(Type == ENTTYPE_LASER)
+			{
+				pCopy = new CLaser(*((CLaser *)pEnt));
+			}
+			else if(Type == ENTTYPE_DRAGGER)
+				pCopy = new CDragger(*((CDragger *)pEnt));
+			else if(Type == ENTTYPE_CHARACTER)
+				pCopy = new CCharacter(*((CCharacter *)pEnt));
+			else if(Type == ENTTYPE_PICKUP)
+				pCopy = new CPickup(*((CPickup *)pEnt));
+			else if(Type == ENTTYPE_PLASMA)
+				pCopy = new CPlasma(*((CPlasma *)pEnt));
+			if(pCopy)
+			{
+				pCopy->m_pParent = nullptr;
+				pCopy->m_pChild = nullptr;
+				// Keep the source's lifetime state, as CopyWorld does. Clearing
+				// destruction markers would resurrect entities in speculative ticks;
+				// isolation comes from detached parent/child links instead.
+				this->InsertEntity(pCopy);
+			}
+		}
+	}
+	m_IsValidCopy = true;
+}
+
+
 CEntity *CGameWorld::FindMatch(int ObjId, int ObjType, const void *pObjData)
 {
 	switch(ObjType)
