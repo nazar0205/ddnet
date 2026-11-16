@@ -744,7 +744,7 @@ void CGameWorld::CopyWorldIsolated(const CGameWorld *pFrom, CCollision *pCollisi
 
 	for(int Type = 0; Type < NUM_ENTTYPES; Type++)
 	{
-		for(CEntity *pEnt = pFrom->FindLast(Type); pEnt; pEnt = pEnt->TypePrev())
+		for(CEntity *pEnt = const_cast<CGameWorld *>(pFrom)->FindLast(Type); pEnt; pEnt = pEnt->TypePrev())
 		{
 			CEntity *pCopy = nullptr;
 
