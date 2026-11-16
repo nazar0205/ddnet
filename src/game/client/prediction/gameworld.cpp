@@ -718,7 +718,7 @@ void CGameWorld::CopyWorld(CGameWorld *pFrom)
 	m_IsValidCopy = true;
 }
 
-void CGameWorld::CopyWorldIsolated(CGameWorld *pFrom, CCollision *pCollision, CTuningParams *pTuningList)
+void CGameWorld::CopyWorldIsolated(const CGameWorld *pFrom, CCollision *pCollision, CTuningParams *pTuningList)
 {
 	if(!pFrom || pFrom == this || !pCollision || !pTuningList)
 	return;
