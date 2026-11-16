@@ -95,57 +95,50 @@ namespace OpenKrx
 		return vResults;
 	}
 
-	std::unique_ptr<IBlatantSimulation> CGameWorldSimulation::Clone() const
-	{
-		auto pResult = std::make_unique<CGameWorldSimulation>();
-		pResult->CopyFrom(m_World, m_LocalClientId);
-		pResult->m_pJobCollision = m_pJobCollision;
-		pResult->m_pJobTuning = m_pJobTuning;
-		pResult->m_pGameClient = m_pGameClient;
-		pResult->m_pJobEngine = m_pJobEngine;
-		pResult->m_LimitAutomaticFire = m_LimitAutomaticFire;
-		pResult->m_AllowImmediateShot = m_AllowImmediateShot;
-		pResult->m_AutomaticFireStep = m_AutomaticFireStep;
-		return pResult;
-	}
+	
+std::unique_ptr<IBlatantSimulation> CGameWorldSimulation::Clone() const
+{
+	auto pResult = std::make_unique<CGameWorldSimulation>();
+	pResult->CopyFrom(m_World, m_LocalClientId);
+	pResult->m_pGameClient = m_pGameClient;
+	pResult->m_pJobEngine = m_pJobEngine;
+	pResult->m_LimitAutomaticFire = m_LimitAutomaticFire;
+	pResult->m_AllowImmediateShot = m_AllowImmediateShot;
+	pResult->m_AutomaticFireStep = m_AutomaticFireStep;
+	return pResult;
+}
 
-	std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
-	{
-		auto pResult = std::unique_ptr<CGameWorldSimulation>(static_cast<CGameWorldSimulation *>(Clone().release()));
-		pResult->m_pJobCollision = m_World.Collision()->CreateIsolatedCopy();
-		pResult->m_pJobTuning = std::make_shared<std::array<CTuningParams, 256>>();
-		std::copy_n(m_World.TuningList(), 256, pResult->m_pJobTuning->begin());
-		pResult->m_World.RebindCollision(pResult->m_pJobCollision.get());
-		pResult->m_World.RebindTuning(pResult->m_pJobTuning->data());
-		return pResult;
-	}
+std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
+{
+	return std::unique_ptr<CGameWorldSimulation>(
+		static_cast<CGameWorldSimulation *>(Clone().release()));
+}
+
 
 	void CGameWorldSimulation::CopyFrom(const CGameWorld &SourceWorld, int LocalClientId)
-	{
-		m_World.CopyWorldIsolated(&SourceWorld);
-		// Avoid and Rocket share the recovered KRX speculative projectile rules.
-		// The live DDNet world keeps its normal rules unless explicitly opted in.
-		m_World.m_WorldConfig.m_KrxPrediction = true;
-		m_World.m_WorldConfig.m_KrxAvoidDeath = g_Config.m_AvoidFreeze && g_Config.m_AvoidAgentType == 2 && g_Config.m_AvoidBlatantDeath;
-		m_World.m_WorldConfig.m_KrxAvoidTeles = g_Config.m_AvoidFreeze && g_Config.m_AvoidAgentType == 2 && g_Config.m_AvoidBlatantTeles;
-		m_LocalClientId = LocalClientId;
-		m_pLocal = LocalClientId >= 0 ? m_World.GetCharacterById(LocalClientId) : nullptr;
-		m_pGameClient = nullptr;
-		m_pJobEngine = nullptr;
-		m_LimitAutomaticFire = m_AllowImmediateShot = false;
-		m_AutomaticFireStep = 0;
-	}
+{
+	m_pJobCollision = std::make_shared<CCollision>();
+	m_pJobCollision->CopyFrom(*SourceWorld.Collision());
+
+	m_pJobTuning = std::make_shared<std::array<CTuningParams, 256>>();
+	std::copy_n(SourceWorld.TuningList(), 256, m_pJobTuning->begin());
+
+	m_World.CopyWorldIsolated(&SourceWorld, m_pJobCollision.get(), m_pJobTuning->data());
+
+	m_LocalClientId = LocalClientId;
+	m_pLocal = LocalClientId >= 0 ? m_World.GetCharacterById(LocalClientId) : nullptr;
+	m_pGameClient = nullptr;
+	m_pJobEngine = nullptr;
+	m_LimitAutomaticFire = m_AllowImmediateShot = false;
+	m_AutomaticFireStep = 0;
+}
 
 	void CGameWorldSimulation::PreparePlayers(bool PredictPlayers, CGameClient *pGameClient)
 	{
+
 		m_pGameClient = pGameClient;
 		m_pJobEngine = pGameClient ? pGameClient->Engine() : nullptr;
-		if(pGameClient)
-		{
-			// 21e3c0 uses the active local tuning, not the projectile owner's zone.
-			m_World.m_WorldConfig.m_KrxExplosionStrengthValid = true;
-			m_World.m_WorldConfig.m_KrxExplosionStrength = pGameClient->m_aTuning[g_Config.m_ClDummy].m_ExplosionStrength;
-		}
+		
 		if(!m_pLocal)
 			return;
 		// 0x1402cd0c0: discard inactive/other-team/distant tees, then remove all
