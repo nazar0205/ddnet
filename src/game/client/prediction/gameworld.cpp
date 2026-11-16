@@ -720,14 +720,15 @@ void CGameWorld::CopyWorld(CGameWorld *pFrom)
 
 void CGameWorld::CopyWorldIsolated(CGameWorld *pFrom, CCollision *pCollision, CTuningParams *pTuningList)
 {
-	if(!pFrom || pFrom == this || !pCollision)
+	if(!pFrom || pFrom == this || !pCollision || !pTuningList)
+    return;
 		return;
 
 	m_IsValidCopy = false;
 
 	m_GameTick = pFrom->m_GameTick;
 	m_pCollision = pCollision;
-	m_WorldConfig = pFrom->m_WorldConfig;
+	m_pTuningList = pTuningList;
 	m_pTuningList = pFrom->m_pTuningList;
 	m_pMapBugs = pFrom->m_pMapBugs;
 	m_Teams = pFrom->m_Teams;
