@@ -305,20 +305,7 @@ else
         ? CBlatantPlan::SAFE
         : FollowUp.m_Life + Elapsed;
 }
-            {
-                // Predict the remaining movement after successful re-hooking.
-                const int Remaining = std::max(0, m_Settings.m_CheckTicks - 2);
-                const auto FollowUp = Greedy(
-                    *pRehookWorld,
-                    RehookInput,
-                    Remaining,
-                    Aim,
-                    true);
 
-                Life = FollowUp.m_Life == CBlatantPlan::SAFE
-                    ? CBlatantPlan::SAFE
-                    : FollowUp.m_Life + 2;
-            }
         }
     }
 }
