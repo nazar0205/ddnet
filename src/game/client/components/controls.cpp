@@ -493,8 +493,7 @@ if(g_Config.m_ClBlackout &&
         if(Adjusted)
         {
             m_aInputData[g_Config.m_ClDummy] = *Adjusted;
-            m_aInputData[g_Config.m_ClDummy].m_Jump =
-                OriginalInput.m_Jump;
+            
         }
     }
 }
