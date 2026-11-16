@@ -184,9 +184,9 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 			return true;
 		return m_pLocal->m_FreezeTime > 0 || m_pLocal->Core()->m_DeepFrozen || m_pLocal->Core()->m_IsInFreeze;
 	}
-bool CGameWorldSimulation::HookAttached() const
+int CGameWorldSimulation::HookState() const
 {
-    return m_pLocal && m_pLocal->Core()->m_HookState == HOOK_GRABBED;
+    return m_pLocal ? m_pLocal->Core()->m_HookState : HOOK_RETRACTED;
 }
 
 	bool CGameWorldSimulation::OnUnfreezeTile() const
