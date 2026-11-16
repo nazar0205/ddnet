@@ -1,6 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "controls.h"
+#include <game/client/avoid/blatant.h>
+#include <game/client/avoid/simulation.h>
 
 #include <base/dbg.h>
 #include <base/mem.h>
