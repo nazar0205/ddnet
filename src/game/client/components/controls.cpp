@@ -467,14 +467,14 @@ else if(LeftScore == RightScore && LeftScore < 1000)
 }
 
 // Blackout Blatant Avoid
+		static OpenKrx::CBlatantPlanner Planner;
 if(g_Config.m_ClBlackout &&
     g_Config.m_ClBlackoutBlatantAvoid &&
     Client()->State() == IClient::STATE_ONLINE &&
     GameClient()->m_Snap.m_pLocalCharacter &&
     GameClient()->m_Snap.m_LocalClientId >= 0)
 {
-    static OpenKrx::CBlatantPlanner Planner;
-
+    
     const int ClientId = GameClient()->m_Snap.m_LocalClientId;
 
     auto Simulation = OpenKrx::CreateSimulation(
@@ -500,7 +500,7 @@ if(g_Config.m_ClBlackout &&
 }
 else
 {
-    // Planner reset will be handled separately.
+    Planner.Reset();
 }
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
