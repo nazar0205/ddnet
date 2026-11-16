@@ -164,7 +164,7 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 		{
 			// Use the world's current counter, not the candidate's possibly stale
 			// NSIF counter: jumping between even counters can still create presses.
-			Copy.m_Fire = m_pLocal->DiagnosticLatestInput().m_Fire;
+		Copy.m_Fire = m_pLocal->LatestInputFire();
 			if(Copy.m_Fire & 1)
 				Copy.m_Fire = (Copy.m_Fire + 1) & INPUT_STATE_MASK;
 		}
