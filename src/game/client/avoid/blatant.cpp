@@ -262,18 +262,19 @@ if(Input.m_Hook == 1)
         else
         {
             // Tick 2: force a new hook toward the selected anchor.
-            CNetObj_PlayerInput RehookInput = Candidate;
-            RehookInput.m_Hook = 1;
-            AimAt(RehookInput, *Aim, pRehookWorld->Position());
-
             pRehookWorld->Tick(RehookInput);
 
-            if(pRehookWorld->Frozen())
-            {
-                Life = 1;
-            }
-            else
-            {
+if(pRehookWorld->Frozen())
+{
+    Life = 1;
+}
+else if(!pRehookWorld->HookAttached())
+{
+    Life = 1;
+}
+else
+{
+    // Predict the remaining movement after successful re-hooking.
                 // Predict the remaining movement after re-hooking.
                 const int Remaining = std::max(0, m_Settings.m_CheckTicks - 2);
                 const auto FollowUp = Greedy(
