@@ -4,6 +4,7 @@
 #define GAME_CLIENT_GAMECLIENT_H
 
 #include "render.h"
+#include "krx/aimbot.h"
 
 #include <base/color.h>
 #include <base/types.h>
@@ -195,6 +196,7 @@ public:
 	CRaceDemo m_RaceDemo;
 	CGhost m_Ghost;
 	CLocalServer m_LocalServer;
+    OpenKrx::CAimbot m_Aimbot;
 
 private:
 	std::vector<class CComponent *> m_vpAll;
