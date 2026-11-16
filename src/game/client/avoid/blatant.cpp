@@ -241,7 +241,9 @@ namespace OpenKrx
 				if(MayElide && AutoLife == CBlatantPlan::SAFE && !(Dot > AssistDot))
 					continue;
 				// 0x1402d1060 uses a literal 26 here, independently of Check Ticks.
-				const int Life = ConstantLife(World, Candidate, 26);
+				const int Life = Input.m_Hook == 1
+    ? Greedy(World, Candidate, m_Settings.m_CheckTicks, Aim).m_Life
+    : ConstantLife(World, Candidate, 26);
 				if(Dot > AssistDot && Life > AssistLife)
 				{
 					AssistDot = Dot;
