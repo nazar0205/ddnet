@@ -239,7 +239,7 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 		// Player prediction only decides whether the snapshot contains other tees.
 		// A missing predicted local tee makes cd0c0 fail. Falling back to the
 		// authoritative world would silently plan from a different point in time.
-		pResult->CopyFrom(pGameClient->KrxPredictedWorld(), ClientId);
+		pResult->CopyFrom(pGameClient->m_PredictedWorld, ClientId);
 		pResult->PreparePlayers(PredictPlayers, pGameClient);
 		if(PendingAutomaticFire)
 			pResult->LimitPendingAutomaticFire(AllowImmediateShot);
