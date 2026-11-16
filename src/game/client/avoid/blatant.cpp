@@ -192,10 +192,8 @@ namespace OpenKrx
 		};
 		float AssistDot = -20.0f;
 		const vec2 Mouse = normalize(InputAim(Input));
-		float Fov = static_cast<float>(m_Settings.m_Fov) * pi / 180.0f;
-if(m_Settings.m_Fov == 360 || m_Settings.m_SafetyHookSearch)
-    Fov = 2.0f * pi;
-		if(m_Settings.m_Fov == 360)
+				float Fov = static_cast<float>(m_Settings.m_Fov) * pi / 180.0f;
+		if(m_Settings.m_Fov == 360 || m_Settings.m_SafetyHookSearch)
 			Fov = 2.0f * pi;
 		const float Step = Fov / static_cast<float>(std::max(1, m_Settings.m_Segments));
 		const float Step50 = Step / 50.0f;
@@ -261,10 +259,10 @@ if(m_Settings.m_Fov == 360 || m_Settings.m_SafetyHookSearch)
 		}
 		if(m_Settings.m_AimAssist)
     vResult.push_back(BestAssist);
-if(m_Settings.m_AutoAim || m_Settings.m_SafetyHookSearch)
-    vResult.push_back(BestAuto);
-		return vResult;
-	}
+		if(m_Settings.m_AimAssist)
+			vResult.push_back(BestAssist);
+		if(m_Settings.m_AutoAim || m_Settings.m_SafetyHookSearch)
+			vResult.push_back(BestAuto);
 
 	std::vector<std::vector<CNetObj_PlayerInput>> CBlatantPlanner::CandidateGroups(const CNetObj_PlayerInput &Input) const
 	{
