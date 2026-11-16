@@ -240,7 +240,7 @@ namespace OpenKrx
 				// Keep every original probe for adapters with possible side effects.
 				if(MayElide && AutoLife == CBlatantPlan::SAFE && !(Dot > AssistDot))
 					continue;
-				// Re-hook sequence: release, hook the selected anchor, then predict survival.
+			// Re-hook sequence: release, hook the selected anchor, then predict survival.
 int Life;
 if(Input.m_Hook == 1)
 {
@@ -261,21 +261,24 @@ if(Input.m_Hook == 1)
         }
         else
         {
-            // Tick 2: force a new hook toward the selected anchor.
+            // Tick 2: start a new hook toward the selected anchor.
+            CNetObj_PlayerInput RehookInput = Candidate;
+            RehookInput.m_Hook = 1;
+            AimAt(RehookInput, *Aim, pRehookWorld->Position());
+
             pRehookWorld->Tick(RehookInput);
 
-if(pRehookWorld->Frozen())
-{
-    Life = 1;
-}
-else if(!pRehookWorld->HookAttached())
-{
-    Life = 1;
-}
-else
-{
-    // Predict the remaining movement after successful re-hooking.
-                // Predict the remaining movement after re-hooking.
+            if(pRehookWorld->Frozen())
+            {
+                Life = 1;
+            }
+            else if(!pRehookWorld->HookAttached())
+            {
+                Life = 1;
+            }
+            else
+            {
+                // Predict the remaining movement after successful re-hooking.
                 const int Remaining = std::max(0, m_Settings.m_CheckTicks - 2);
                 const auto FollowUp = Greedy(
                     *pRehookWorld,
