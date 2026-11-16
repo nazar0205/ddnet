@@ -1,4 +1,5 @@
 #include "simulation.h"
+#include <algorithm>
 
 #include <engine/engine.h>
 #include <engine/shared/config.h>
