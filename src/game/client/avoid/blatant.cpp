@@ -269,20 +269,18 @@ if(Input.m_Hook == 1)
 
             pRehookWorld->Tick(RehookInput);
 
-int RehookTicks = 2;
+int Elapsed = 2;
 
 while(pRehookWorld->HookState() == HOOK_FLYING &&
-    RehookTicks <= m_Settings.m_CheckTicks)
+    Elapsed < m_Settings.m_CheckTicks)
 {
     AimAt(RehookInput, *Aim, pRehookWorld->Position());
     pRehookWorld->Tick(RehookInput);
-    ++RehookTicks;
+    ++Elapsed;
 
     if(pRehookWorld->Frozen())
         break;
 }
-
-const int Elapsed = RehookTicks - 1;
 
 if(pRehookWorld->Frozen())
 {
