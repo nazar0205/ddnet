@@ -231,6 +231,30 @@ bool CGameWorldSimulation::PlayerHookingLocal() const
 
     return false;
 }
+vec2 CGameWorldSimulation::HookPullDirection() const
+{
+    if(!m_pLocal)
+        return vec2(0.0f, 0.0f);
+
+    vec2 PullDirection(0.0f, 0.0f);
+
+    for(int Id : m_pLocal->Core()->m_AttachedPlayers)
+    {
+        CCharacter *pCharacter = m_World.GetCharacterById(Id);
+        if(!pCharacter || Id == m_LocalClientId)
+            continue;
+
+        if(pCharacter->Core()->HookedPlayer() != m_LocalClientId)
+            continue;
+
+        PullDirection += normalize(pCharacter->m_Pos - m_pLocal->m_Pos);
+    }
+
+    if(length(PullDirection) <= 0.001f)
+        return vec2(0.0f, 0.0f);
+
+    return normalize(PullDirection);
+}
 
 	bool CGameWorldSimulation::OnUnfreezeTile() const
 	{
