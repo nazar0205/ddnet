@@ -19,8 +19,9 @@ namespace OpenKrx
 		bool m_Nsif = true;
 		bool m_PlayerPrediction = true;
 		bool m_Direction = true;
-		bool m_Hook = true;
-		bool m_Death = false;
+        bool m_Hook = true;
+        bool m_Jump = true;
+        bool m_Death = false;
 		bool m_Teles = false;
 		bool m_Unfreeze = false;
 		int m_UnfreezeTicks = 26;
