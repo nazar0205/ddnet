@@ -55,6 +55,7 @@ bool m_SafetyHookSearch = true;
         virtual bool HookAttached() const = 0;
         virtual int HookState() const = 0;
         virtual bool PlayerHookingLocal() const = 0;
+        virtual vec2 HookPullDirection() const { return vec2(0.0f, 0.0f); }
 		virtual bool Dead() const { return false; }
 		virtual bool OnUnfreezeTile() const = 0;
 		virtual vec2 Position() const = 0;
