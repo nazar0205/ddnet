@@ -458,6 +458,8 @@ else
 	CNetObj_PlayerInput CBlatantPlanner::AutoDrag(IBlatantSimulation &World,
 		CNetObj_PlayerInput Input, vec2 MouseAim)
 	{
+		if(!m_Settings.m_Hook)
+            return Input;
 		const auto Aim = World.DragAim();
 		if(!Aim || *Aim == vec2(0, 0))
 			return Input;
@@ -466,7 +468,14 @@ else
 		Candidate.m_TargetY = static_cast<int>(Aim->y);
 		Candidate.m_Hook = 1;
 		const vec2 Anchor = m_TrackPoint ? *m_TrackPoint - World.Position() : MouseAim;
-		if(Greedy(World, Candidate, m_Settings.m_CheckTicks, Anchor, false).m_Life != CBlatantPlan::SAFE)
+		if(Greedy(
+    World,
+    Candidate,
+    m_Settings.m_CheckTicks,
+    Anchor,
+    false,
+    m_Settings.m_Direction,
+    m_Settings.m_Hook).m_Life != CBlatantPlan::SAFE)
 			return Input;
 		m_Dragged = true;
 		return Candidate;
