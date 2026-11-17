@@ -491,16 +491,12 @@ if(g_Config.m_ClBlackout &&
             vec2(OriginalInput.m_TargetX, OriginalInput.m_TargetY));
 
         if(Adjusted)
-        {
             m_aInputData[g_Config.m_ClDummy] = *Adjusted;
-            
-        }
     }
-}
-else
-{
-    Planner.Reset();
-}
+    else
+    {
+        Planner.Reset();
+	}
 		// check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Jump != m_aLastData[g_Config.m_ClDummy].m_Jump;
