@@ -510,6 +510,12 @@ else
 		// on success, so checking the probe first has the same result for a
 		// fraction of the cost.
 				const bool PlayerThreat = World.PlayerHookingLocal();
+		const vec2 HookPull = World.HookPullDirection();
+
+if(PlayerThreat && m_Settings.m_Direction && std::abs(HookPull.x) > 0.25f)
+{
+    Input.m_Direction = HookPull.x > 0.0f ? -1 : 1;
+}
 
 		m_Diagnostic.m_ConstantLife = ConstantLife(World, Input, m_Settings.m_KickInTicks);
 		if(m_Diagnostic.m_ConstantLife == CBlatantPlan::SAFE && !PlayerThreat)
