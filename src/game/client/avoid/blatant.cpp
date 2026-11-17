@@ -511,6 +511,8 @@ else
 		// fraction of the cost.
 				const bool PlayerThreat = World.PlayerHookingLocal();
 		const vec2 HookPull = World.HookPullDirection();
+		if(PlayerThreat)
+			m_vLastPlan.clear(); // Do not replay an old escape tail against a new hook threat.
 
 if(PlayerThreat && m_Settings.m_Direction && std::abs(HookPull.x) > 0.25f)
 {
@@ -543,8 +545,10 @@ if(PlayerThreat && m_Settings.m_Direction && std::abs(HookPull.x) > 0.25f)
 			m_vLastPlan = Guard.m_vInputs;
 			return m_Settings.m_AutoDrag ? AutoDrag(World, Input, MouseAim) : Input;
 		}
-		// Emergency Jump: try jumping when the current trajectory is unsafe.
-if(m_Settings.m_Jump)
+		// Keep the legacy fast jump for ordinary freeze threats. When another
+		// player is hooking us, evaluate jump as one of the escape candidates
+		// instead of accepting it before comparing other actions.
+if(m_Settings.m_Jump && !PlayerThreat)
 {
     CNetObj_PlayerInput JumpInput = Input;
     JumpInput.m_Jump = 1;
@@ -591,7 +595,16 @@ if(m_Settings.m_Jump)
 		}
 
 		CBlatantPlan Best;
-		const auto vCandidates = Candidates(World, Input, MouseAim);
+		CBlatantPlan BestSafe;
+		float BestEscapeScore = -1.0e30f;
+		float BestSafeEscapeScore = -1.0e30f;
+		auto vCandidates = Candidates(World, Input, MouseAim);
+		if(PlayerThreat && m_Settings.m_Jump)
+		{
+			CNetObj_PlayerInput JumpInput = Input;
+			JumpInput.m_Jump = 1;
+			vCandidates.push_back(JumpInput);
+		}
 		auto vResults = World.SearchCandidates(
     vCandidates,
     m_Settings.m_CheckTicks,
@@ -603,29 +616,96 @@ if(m_Settings.m_Jump)
 			for(size_t i = 0; i < vResults.size(); ++i)
 				m_Diagnostic.m_vCandidates.push_back({vCandidates[i], vResults[i].m_Life, (int)vResults[i].m_vInputs.size()});
 		}
+
+		// For a player-hook threat, survival time alone is not enough: several
+		// candidates may all survive the complete horizon while one still moves
+		// toward the hooker. Score the first eight simulated ticks by movement
+		// against the pull vector, using the same isolated prediction physics.
+		const auto EscapeScore = [&](const CBlatantPlan &Plan) {
+			if(!PlayerThreat || Plan.m_vInputs.empty())
+				return 0.0f;
+			auto pEscape = World.Clone();
+			if(!pEscape || !pEscape->Valid())
+				return -1.0e30f;
+			float Score = 0.0f;
+			const size_t Steps = std::min<size_t>(8, Plan.m_vInputs.size());
+			for(size_t Tick = 0; Tick < Steps; ++Tick)
+			{
+				const vec2 Pull = pEscape->HookPullDirection();
+				const vec2 Before = pEscape->Position();
+				pEscape->Tick(Plan.m_vInputs[Tick]);
+				if(length(Pull) > 0.001f)
+					Score += dot(pEscape->Position() - Before, -normalize(Pull));
+				if(pEscape->Frozen())
+					break;
+			}
+			return Score;
+		};
+
 		int Index = -1;
 		int BestIndex = -1;
+		int BestSafeIndex = -1;
 		for(auto &Plan : vResults)
 		{
 			++Index;
+			const float Score = EscapeScore(Plan);
 			if(Plan.m_Life == CBlatantPlan::SAFE)
 			{
-				m_Diagnostic.m_pReason = "search_safe";
-				m_Diagnostic.m_Selected = Index;
-				m_vLastPlan = Plan.m_vInputs;
-				if(m_vLastPlan.empty())
+				if(!PlayerThreat)
 				{
-					m_Diagnostic.m_pReason = "empty_safe_plan";
-					return std::nullopt;
+					m_Diagnostic.m_pReason = "search_safe";
+					m_Diagnostic.m_Selected = Index;
+					m_vLastPlan = Plan.m_vInputs;
+					if(m_vLastPlan.empty())
+					{
+						m_Diagnostic.m_pReason = "empty_safe_plan";
+						return std::nullopt;
+					}
+					m_LastDecisionLife = CBlatantPlan::SAFE;
+					return m_vLastPlan.front();
 				}
-				m_LastDecisionLife = CBlatantPlan::SAFE;
-				return m_vLastPlan.front();
+				if(Score > BestSafeEscapeScore)
+				{
+					BestSafeEscapeScore = Score;
+					BestSafeIndex = Index;
+					BestSafe = std::move(Plan);
+				}
+				continue;
 			}
-			if(Plan.m_Life > Best.m_Life)
+			if(Plan.m_Life > Best.m_Life || (Plan.m_Life == Best.m_Life && Score > BestEscapeScore))
 			{
 				BestIndex = Index;
+				BestEscapeScore = Score;
 				Best = std::move(Plan);
 			}
+		}
+		if(PlayerThreat && BestSafe.m_Life == CBlatantPlan::SAFE)
+		{
+			m_Diagnostic.m_pReason = "player_hook_escape";
+			m_Diagnostic.m_Selected = BestSafeIndex;
+			m_vLastPlan = BestSafe.m_vInputs;
+			if(m_vLastPlan.empty())
+			{
+				m_Diagnostic.m_pReason = "empty_safe_plan";
+				return std::nullopt;
+			}
+			m_LastDecisionLife = CBlatantPlan::SAFE;
+			return m_vLastPlan.front();
+		}
+
+		if(PlayerThreat)
+		{
+			// A previous NSIF tail was deliberately cleared for this threat, so
+			// use the best freshly simulated partial escape instead of replaying it.
+			if(Best.m_Life > 0 && !Best.m_vInputs.empty())
+			{
+				m_Diagnostic.m_pReason = "player_hook_partial";
+				m_Diagnostic.m_Selected = BestIndex;
+				m_LastDecisionLife = Best.m_Life;
+				return Best.m_vInputs.front();
+			}
+			m_Diagnostic.m_pReason = "player_hook_no_escape";
+			return std::nullopt;
 		}
 
 		// No safe result. NSIF re-checks the whole stored tail except its first
@@ -669,6 +749,38 @@ if(m_Settings.m_Jump)
 			Input.m_Fire = Fire;
 	}
 
+	CNetObj_PlayerInput CBlatantPlanner::ApplyHookPulse(CNetObj_PlayerInput Input, bool HookHeld)
+	{
+		if(!m_Settings.m_HookPulse || !m_Settings.m_Hook || !HookHeld)
+		{
+			m_HookPulseCounter = 0;
+			m_HookPulseRelease = false;
+			return Input;
+		}
+
+		if(m_HookPulseRelease)
+		{
+			m_HookPulseRelease = false;
+			m_HookPulseCounter = 0;
+			Input.m_Hook = 1;
+			return Input;
+		}
+		if(Input.m_Hook == 0)
+		{
+			m_HookPulseCounter = 0;
+			return Input;
+		}
+
+		++m_HookPulseCounter;
+		if(m_HookPulseCounter >= std::max(2, m_Settings.m_HookPulseTicks))
+		{
+			m_HookPulseCounter = 0;
+			m_HookPulseRelease = true;
+			Input.m_Hook = 0;
+		}
+		return Input;
+	}
+
 	void CBlatantPlanner::Reset()
 	{
 		m_vLastPlan.clear();
@@ -676,6 +788,8 @@ if(m_Settings.m_Jump)
 		m_AssistPoint.reset();
 		m_AutoAimPoint.reset();
 		m_Dragged = false;
+		m_HookPulseCounter = 0;
+		m_HookPulseRelease = false;
 		m_Diagnostic = {};
 		m_LastDecisionLife = -1;
 	}
