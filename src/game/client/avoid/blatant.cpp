@@ -483,6 +483,19 @@ else
 	std::optional<CNetObj_PlayerInput> CBlatantPlanner::Decide(IBlatantSimulation &World,
 		CNetObj_PlayerInput Input, vec2 MouseAim)
 	{
+		const int ManualHook = Input.m_Hook;
+		m_HookPulseEligible = false;
+		// NSIF may only continue a plan while the user's physical controls/aim
+		// remain unchanged. A new manual action invalidates the previous suffix.
+		if(m_HasManualInputSnapshot &&
+			(m_LastManualInput.m_Direction != Input.m_Direction ||
+			 m_LastManualInput.m_Hook != Input.m_Hook ||
+			 m_LastManualInput.m_Jump != Input.m_Jump ||
+			 m_LastManualInput.m_TargetX != Input.m_TargetX ||
+			 m_LastManualInput.m_TargetY != Input.m_TargetY))
+			m_vLastPlan.clear();
+		m_LastManualInput = Input;
+		m_HasManualInputSnapshot = true;
 		m_LastDecisionLife = -1;
 		m_Diagnostic = {};
 		if(!World.Valid())
@@ -509,15 +522,24 @@ else
 		// constant probe, but with Auto Drag disabled the greedy plan is discarded
 		// on success, so checking the probe first has the same result for a
 		// fraction of the cost.
-				const bool PlayerThreat = World.PlayerHookingLocal();
-		const vec2 HookPull = World.HookPullDirection();
-		if(PlayerThreat)
-			m_vLastPlan.clear(); // Do not replay an old escape tail against a new hook threat.
+		vec2 ThreatDirection(0.0f, 0.0f);
+		int ThreatTimeToFreeze = CBlatantPlan::SAFE;
+		const bool PlayerThreat = World.PredictPlayerThreat(
+			Input, m_Settings.m_CheckTicks, m_Settings.m_ThreatSensitivity, ThreatDirection, ThreatTimeToFreeze);
+		m_Diagnostic.m_PlayerThreatTime = PlayerThreat ? ThreatTimeToFreeze : -1;
+		if(PlayerThreat || m_PlayerThreatActive)
+			m_vLastPlan.clear(); // Never carry an old plan into or out of an external-player threat.
+		m_PlayerThreatActive = PlayerThreat;
 
-if(PlayerThreat && m_Settings.m_Direction && std::abs(HookPull.x) > 0.25f)
-{
-    Input.m_Direction = HookPull.x > 0.0f ? -1 : 1;
-}
+		if(PlayerThreat && m_Settings.m_Direction && std::abs(ThreatDirection.x) > 0.10f)
+			Input.m_Direction = ThreatDirection.x > 0.0f ? -1 : 1;
+
+		const auto MarkHookPulseOwnership = [&](const CNetObj_PlayerInput &Output) {
+			// Pulse only a hook newly selected by AVOID. A hook already held by the
+			// player remains manual and is never cycled by this feature.
+			m_HookPulseEligible = m_Settings.m_HookPulse && m_Settings.m_Hook &&
+				ManualHook == 0 && Output.m_Hook == 1;
+		};
 
 		m_Diagnostic.m_ConstantLife = ConstantLife(World, Input, m_Settings.m_KickInTicks);
 		if(m_Diagnostic.m_ConstantLife == CBlatantPlan::SAFE && !PlayerThreat)
@@ -610,6 +632,54 @@ if(m_Settings.m_Jump && !PlayerThreat)
     m_Settings.m_CheckTicks,
     m_Settings.m_Direction,
     m_Settings.m_Hook);
+
+		// Search with the actual release/re-engage cadence too. Otherwise a plan
+		// can be judged safe with a continuously held hook and fail at the pulse
+		// release tick that will really be sent to the server.
+		if(m_Settings.m_HookPulse && m_Settings.m_Hook && ManualHook == 0)
+		{
+			const auto PulsedLife = [&](const CBlatantPlan &Plan) {
+				if(Plan.m_vInputs.empty() || std::none_of(Plan.m_vInputs.begin(), Plan.m_vInputs.end(), [](const CNetObj_PlayerInput &Action) { return Action.m_Hook != 0; }))
+					return Plan.m_Life;
+				auto pCopy = World.Clone();
+				if(!pCopy || !pCopy->Valid())
+					return -5;
+				int PulseCounter = m_HookPulseCounter;
+				bool PulseRelease = m_HookPulseRelease;
+				for(size_t Tick = 0; Tick < Plan.m_vInputs.size(); ++Tick)
+				{
+					auto PulsedInput = Plan.m_vInputs[Tick];
+					if(PulsedInput.m_Hook == 0)
+					{
+						PulseCounter = 0;
+						PulseRelease = false;
+					}
+					else if(PulseRelease)
+					{
+						PulseRelease = false;
+						PulseCounter = 0;
+						PulsedInput.m_Hook = 1;
+					}
+					else
+					{
+						++PulseCounter;
+						if(PulseCounter >= std::max(2, m_Settings.m_HookPulseTicks))
+						{
+							PulseCounter = 0;
+							PulseRelease = true;
+							PulsedInput.m_Hook = 0;
+						}
+					}
+					pCopy->Tick(PulsedInput);
+					if(pCopy->Frozen())
+						return static_cast<int>(Tick);
+				}
+				return CBlatantPlan::SAFE;
+			};
+			for(auto &Plan : vResults)
+				Plan.m_Life = std::min(Plan.m_Life, PulsedLife(Plan));
+		}
+
 		if(m_Tracing)
 		{
 			m_Diagnostic.m_vCandidates.reserve(vResults.size());
@@ -631,11 +701,10 @@ if(m_Settings.m_Jump && !PlayerThreat)
 			const size_t Steps = std::min<size_t>(8, Plan.m_vInputs.size());
 			for(size_t Tick = 0; Tick < Steps; ++Tick)
 			{
-				const vec2 Pull = pEscape->HookPullDirection();
 				const vec2 Before = pEscape->Position();
 				pEscape->Tick(Plan.m_vInputs[Tick]);
-				if(length(Pull) > 0.001f)
-					Score += dot(pEscape->Position() - Before, -normalize(Pull));
+				if(length(ThreatDirection) > 0.001f)
+					Score += dot(pEscape->Position() - Before, -normalize(ThreatDirection));
 				if(pEscape->Frozen())
 					break;
 			}
@@ -661,6 +730,7 @@ if(m_Settings.m_Jump && !PlayerThreat)
 						m_Diagnostic.m_pReason = "empty_safe_plan";
 						return std::nullopt;
 					}
+					MarkHookPulseOwnership(m_vLastPlan.front());
 					m_LastDecisionLife = CBlatantPlan::SAFE;
 					return m_vLastPlan.front();
 				}
@@ -689,6 +759,7 @@ if(m_Settings.m_Jump && !PlayerThreat)
 				m_Diagnostic.m_pReason = "empty_safe_plan";
 				return std::nullopt;
 			}
+			MarkHookPulseOwnership(m_vLastPlan.front());
 			m_LastDecisionLife = CBlatantPlan::SAFE;
 			return m_vLastPlan.front();
 		}
@@ -701,6 +772,7 @@ if(m_Settings.m_Jump && !PlayerThreat)
 			{
 				m_Diagnostic.m_pReason = "player_hook_partial";
 				m_Diagnostic.m_Selected = BestIndex;
+				MarkHookPulseOwnership(Best.m_vInputs.front());
 				m_LastDecisionLife = Best.m_Life;
 				return Best.m_vInputs.front();
 			}
@@ -727,6 +799,7 @@ if(m_Settings.m_Jump && !PlayerThreat)
 			// Safe over the checked tail; it can be shorter than CheckTicks.
 			m_LastDecisionLife = CBlatantPlan::SAFE;
 			const CNetObj_PlayerInput Output = m_vLastPlan[1];
+			MarkHookPulseOwnership(Output);
 			// KRX keeps plan[0] as an anchor and erases only the consumed element.
 			m_vLastPlan.erase(m_vLastPlan.begin() + 1);
 			return Output;
@@ -736,6 +809,7 @@ if(m_Settings.m_Jump && !PlayerThreat)
 		{
 			m_Diagnostic.m_pReason = "best_partial";
 			m_Diagnostic.m_Selected = BestIndex;
+			MarkHookPulseOwnership(Best.m_vInputs.front());
 			m_LastDecisionLife = Best.m_Life;
 			return Best.m_vInputs.front();
 		}
@@ -749,9 +823,9 @@ if(m_Settings.m_Jump && !PlayerThreat)
 			Input.m_Fire = Fire;
 	}
 
-	CNetObj_PlayerInput CBlatantPlanner::ApplyHookPulse(CNetObj_PlayerInput Input, bool HookHeld)
+	CNetObj_PlayerInput CBlatantPlanner::ApplyHookPulse(CNetObj_PlayerInput Input, bool AvoidOwnsHook)
 	{
-		if(!m_Settings.m_HookPulse || !m_Settings.m_Hook || !HookHeld)
+		if(!m_Settings.m_HookPulse || !m_Settings.m_Hook || !AvoidOwnsHook)
 		{
 			m_HookPulseCounter = 0;
 			m_HookPulseRelease = false;
@@ -790,6 +864,10 @@ if(m_Settings.m_Jump && !PlayerThreat)
 		m_Dragged = false;
 		m_HookPulseCounter = 0;
 		m_HookPulseRelease = false;
+		m_HookPulseEligible = false;
+		m_PlayerThreatActive = false;
+		m_HasManualInputSnapshot = false;
+		m_LastManualInput = {};
 		m_Diagnostic = {};
 		m_LastDecisionLife = -1;
 	}
