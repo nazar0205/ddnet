@@ -556,7 +556,14 @@ if(CBlatantPlanner::ConstantLife(World, JumpInput, m_Settings.m_CheckTicks) == C
 				{
 					if(Tick > 0)
 					{
-						const auto Plan = Greedy(*pUnfreeze, Input, m_Settings.m_CheckTicks, m_TrackPoint);
+						const auto Plan = Greedy(
+    *pUnfreeze,
+    Input,
+    m_Settings.m_CheckTicks,
+    m_TrackPoint,
+    true,
+    m_Settings.m_Direction,
+    m_Settings.m_Hook);
 						if(Plan.m_Life == CBlatantPlan::SAFE && !Plan.m_vInputs.empty())
 						{
 							m_LastDecisionLife = CBlatantPlan::SAFE;
