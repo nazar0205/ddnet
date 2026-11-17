@@ -114,7 +114,33 @@ bool m_SafetyHookSearch = true;
 	public:
 		explicit CBlatantPlanner(CBlatantSettings Settings = {}) : m_Settings(Settings) {}
 
-		void SetSettings(const CBlatantSettings &Settings) { m_Settings = Settings; }
+		void SetSettings(const CBlatantSettings &Settings)
+{
+    if(m_Settings.m_CheckTicks != Settings.m_CheckTicks ||
+        m_Settings.m_Nsif != Settings.m_Nsif ||
+        m_Settings.m_PlayerPrediction != Settings.m_PlayerPrediction ||
+        m_Settings.m_Direction != Settings.m_Direction ||
+        m_Settings.m_Hook != Settings.m_Hook ||
+        m_Settings.m_Death != Settings.m_Death ||
+        m_Settings.m_Teles != Settings.m_Teles ||
+        m_Settings.m_Unfreeze != Settings.m_Unfreeze ||
+        m_Settings.m_UnfreezeTicks != Settings.m_UnfreezeTicks ||
+        m_Settings.m_TrackPoint != Settings.m_TrackPoint ||
+        m_Settings.m_SafeTracking != Settings.m_SafeTracking ||
+        m_Settings.m_Aimbot != Settings.m_Aimbot ||
+        m_Settings.m_Fov != Settings.m_Fov ||
+        m_Settings.m_Segments != Settings.m_Segments ||
+        m_Settings.m_AimAssist != Settings.m_AimAssist ||
+        m_Settings.m_AutoAim != Settings.m_AutoAim ||
+        m_Settings.m_AutoDrag != Settings.m_AutoDrag ||
+        m_Settings.m_SafetyHookSearch != Settings.m_SafetyHookSearch)
+    {
+        m_vLastPlan.clear();
+        m_Dragged = false;
+    }
+
+    m_Settings = Settings;
+}
 		const CBlatantSettings &Settings() const { return m_Settings; }
 		void Reset();
 		void SynchronizeFireCounter(int Fire);
