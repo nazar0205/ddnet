@@ -42,7 +42,11 @@ bool m_SafetyHookSearch = true;
 	public:
 		virtual ~IBlatantSimulation() = default;
 		virtual std::unique_ptr<IBlatantSimulation> Clone() const = 0;
-		virtual std::vector<CBlatantPlan> SearchCandidates(const std::vector<CNetObj_PlayerInput> &vInputs, int CheckTicks) const;
+		virtual std::vector<CBlatantPlan> SearchCandidates(
+    const std::vector<CNetObj_PlayerInput> &vInputs,
+    int CheckTicks,
+    bool AllowDirection = true,
+    bool AllowHook = true) const;
 		virtual bool CanElideIndependentProbes() const { return false; }
 		virtual bool Valid() const = 0;
 		virtual void Tick(const CNetObj_PlayerInput &Input) = 0;
@@ -125,8 +129,9 @@ bool m_SafetyHookSearch = true;
 		const std::vector<CNetObj_PlayerInput> &LastPlan() const { return m_vLastPlan; }
 		int LastDecisionLife() const { return m_LastDecisionLife; }
 
-		static CActionGroups ActionGroups(int Direction, bool Hook);
-		static int ConstantLife(const IBlatantSimulation &World, const CNetObj_PlayerInput &Input, int CheckTicks);
+		static CBlatantPlan Greedy(const IBlatantSimulation &World, CNetObj_PlayerInput Input, int CheckTicks,
+    std::optional<vec2> Anchor = std::nullopt, bool TrackFromFirstTick = true,
+    bool AllowDirection = true, bool AllowHook = true);
 		static CNetObj_PlayerInput FilterEmergencyHook(const IBlatantSimulation &World, CNetObj_PlayerInput Proposed, int CheckTicks, bool ManualHook);
 		static CNetObj_PlayerInput KeepDirectionIfSafe(const IBlatantSimulation &World, CNetObj_PlayerInput Proposed, int RequestedDirection, int CheckTicks);
 		static CBlatantPlan Greedy(const IBlatantSimulation &World, CNetObj_PlayerInput Input, int CheckTicks,
