@@ -182,10 +182,18 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 			if(Copy.m_Fire & 1)
 				Copy.m_Fire = (Copy.m_Fire + 1) & INPUT_STATE_MASK;
 		}
-		++m_AutomaticFireStep;
+				++m_AutomaticFireStep;
 		m_pLocal->OnDirectInput(&Copy);
+
+		if(m_pGameClient)
+			m_pGameClient->ApplyPreInputs(m_World.m_GameTick + 1, true, m_World);
+
 		m_World.m_GameTick++;
 		m_pLocal->OnPredictedInput(&Copy);
+
+		if(m_pGameClient)
+			m_pGameClient->ApplyPreInputs(m_World.m_GameTick, false, m_World);
+
 		m_World.Tick();
 		m_pLocal = m_World.GetCharacterById(m_LocalClientId);
 	}
