@@ -314,11 +314,13 @@ else
 {
     const int Remaining = std::max(0, m_Settings.m_CheckTicks - Elapsed);
     const auto FollowUp = Greedy(
-        *pRehookWorld,
-        RehookInput,
-        Remaining,
-        Aim,
-        true);
+    *pRehookWorld,
+    RehookInput,
+    Remaining,
+    Aim,
+    true,
+    m_Settings.m_Direction,
+    m_Settings.m_Hook);
 
     Life = FollowUp.m_Life == CBlatantPlan::SAFE
         ? CBlatantPlan::SAFE
@@ -439,7 +441,14 @@ else
 		auto Candidate = Input;
 		AimAt(Candidate, *Point, World.Position());
 		if(!m_Settings.m_SafeTracking || m_Settings.m_Unfreeze ||
-			Greedy(World, Candidate, m_Settings.m_CheckTicks, Point).m_Life == CBlatantPlan::SAFE)
+			Greedy(
+    World,
+    Candidate,
+    m_Settings.m_CheckTicks,
+    Point,
+    true,
+    m_Settings.m_Direction,
+    m_Settings.m_Hook).m_Life == CBlatantPlan::SAFE)
 		{
 			m_TrackPoint = Point;
 			Input = Candidate;
