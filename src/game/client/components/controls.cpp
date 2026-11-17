@@ -376,6 +376,7 @@ int CControls::SnapInput(int *pData)
 // Blackout Frost Avoid - horizontal avoidance
 if(g_Config.m_ClBlackout &&
     g_Config.m_ClBlackoutFrostAvoid &&
+    !g_Config.m_ClBlackoutBlatantAvoid &&
     GameClient()->m_Snap.m_pLocalCharacter)
 {
     const CCollision *pCollision = GameClient()->Collision();
