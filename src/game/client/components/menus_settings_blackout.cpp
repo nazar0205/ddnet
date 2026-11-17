@@ -51,4 +51,11 @@ void CMenus::RenderSettingsBlackout(CUIRect MainView)
 
 	MainView.HSplitTop(30.0f, &Row, &MainView);
 	Ui()->DoScrollbarOption(&g_Config.m_ClBlackoutBlatantHookPulseTicks, &g_Config.m_ClBlackoutBlatantHookPulseTicks, &Row, Localize("Hook Pulse Interval"), 2, 60);
+
+	MainView.HSplitTop(30.0f, &Row, &MainView);
+	Ui()->DoScrollbarOption(&g_Config.m_ClBlackoutBlatantThreatSensitivity, &g_Config.m_ClBlackoutBlatantThreatSensitivity, &Row, Localize("Player Threat Sensitivity"), 1, 10);
+
+	MainView.HSplitTop(30.0f, &Row, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantPlayerPrediction, Localize("Predict Other Players"), g_Config.m_ClBlackoutBlatantPlayerPrediction, &Row))
+		g_Config.m_ClBlackoutBlatantPlayerPrediction ^= 1;
 }
