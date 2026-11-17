@@ -134,8 +134,7 @@ bool m_SafetyHookSearch = true;
     bool AllowDirection = true, bool AllowHook = true);
 		static CNetObj_PlayerInput FilterEmergencyHook(const IBlatantSimulation &World, CNetObj_PlayerInput Proposed, int CheckTicks, bool ManualHook);
 		static CNetObj_PlayerInput KeepDirectionIfSafe(const IBlatantSimulation &World, CNetObj_PlayerInput Proposed, int RequestedDirection, int CheckTicks);
-		static CBlatantPlan Greedy(const IBlatantSimulation &World, CNetObj_PlayerInput Input, int CheckTicks,
-			std::optional<vec2> Anchor = std::nullopt, bool TrackFromFirstTick = true);
+		
 	};
 }
 
