@@ -23,6 +23,7 @@ namespace OpenKrx
         bool m_Jump = true;
         bool m_HookPulse = false;
         int m_HookPulseTicks = 8;
+        int m_ThreatSensitivity = 7;
         bool m_Death = false;
 		bool m_Teles = false;
 		bool m_Unfreeze = false;
@@ -58,6 +59,16 @@ bool m_SafetyHookSearch = true;
         virtual int HookState() const = 0;
         virtual bool PlayerHookingLocal() const = 0;
         virtual vec2 HookPullDirection() const { return vec2(0.0f, 0.0f); }
+        // True only when other players make the predicted path freeze sooner.
+        virtual bool PredictPlayerThreat(const CNetObj_PlayerInput &Input, int CheckTicks, int Sensitivity, vec2 &Direction, int &TimeToFreeze) const
+        {
+            (void)Input;
+            (void)CheckTicks;
+            (void)Sensitivity;
+            Direction = vec2(0.0f, 0.0f);
+            TimeToFreeze = 9999;
+            return false;
+        }
 		virtual bool Dead() const { return false; }
 		virtual bool OnUnfreezeTile() const = 0;
 		virtual vec2 Position() const = 0;
@@ -81,6 +92,7 @@ bool m_SafetyHookSearch = true;
 		int m_TailLife = -1;
 		int m_TailLength = 0;
 		int m_Selected = -1;
+		int m_PlayerThreatTime = -1;
 
 		struct CCandidate
 		{
@@ -102,6 +114,10 @@ bool m_SafetyHookSearch = true;
 		bool m_Dragged = false;
 		int m_HookPulseCounter = 0;
 		bool m_HookPulseRelease = false;
+		bool m_HookPulseEligible = false;
+		bool m_PlayerThreatActive = false;
+		bool m_HasManualInputSnapshot = false;
+		CNetObj_PlayerInput m_LastManualInput{};
 		int m_LastDecisionLife = -1;
 		bool m_Tracing = false;
 		CBlatantDiagnostic m_Diagnostic;
@@ -132,6 +148,7 @@ bool m_SafetyHookSearch = true;
         m_Settings.m_Jump != Settings.m_Jump ||
         m_Settings.m_HookPulse != Settings.m_HookPulse ||
         m_Settings.m_HookPulseTicks != Settings.m_HookPulseTicks ||
+        m_Settings.m_ThreatSensitivity != Settings.m_ThreatSensitivity ||
         m_Settings.m_Death != Settings.m_Death ||
         m_Settings.m_Teles != Settings.m_Teles ||
         m_Settings.m_Unfreeze != Settings.m_Unfreeze ||
@@ -149,6 +166,7 @@ bool m_SafetyHookSearch = true;
     m_vLastPlan.clear();
     m_HookPulseCounter = 0;
     m_HookPulseRelease = false;
+    m_HookPulseEligible = false;
 
     if(m_Settings.m_Hook && !Settings.m_Hook)
         m_Dragged = false;
@@ -159,7 +177,8 @@ bool m_SafetyHookSearch = true;
 		const CBlatantSettings &Settings() const { return m_Settings; }
 		void Reset();
 		void SynchronizeFireCounter(int Fire);
-		CNetObj_PlayerInput ApplyHookPulse(CNetObj_PlayerInput Input, bool HookHeld);
+		CNetObj_PlayerInput ApplyHookPulse(CNetObj_PlayerInput Input, bool AvoidOwnsHook);
+		bool HookPulseEligible() const { return m_HookPulseEligible; }
 		void SetTracing(bool Enabled) { m_Tracing = Enabled; }
 		const CBlatantDiagnostic &Diagnostic() const { return m_Diagnostic; }
 
