@@ -518,7 +518,14 @@ else
 
 		// Guard, expensive half: a safe greedy plan is stored for NSIF and the
 		// current input is returned unchanged.
-		const auto Guard = Greedy(World, Input, m_Settings.m_CheckTicks, m_TrackPoint);
+		const auto Guard = Greedy(
+    World,
+    Input,
+    m_Settings.m_CheckTicks,
+    m_TrackPoint,
+    true,
+    m_Settings.m_Direction,
+    m_Settings.m_Hook);
 		m_Diagnostic.m_GreedyLife = Guard.m_Life;
 		if(Guard.m_Life == CBlatantPlan::SAFE)
 		{
