@@ -24,6 +24,8 @@ namespace OpenKrx
 			const CGameWorldSimulation &m_World;
 			CNetObj_PlayerInput m_Input;
 			int m_CheckTicks;
+            bool m_AllowDirection;
+            bool m_AllowHook;
 			std::promise<CBlatantPlan> m_Result;
 			std::atomic<bool> m_Claimed{false};
 
@@ -33,8 +35,13 @@ namespace OpenKrx
 			}
 
 		public:
-			CGreedyCandidateJob(const CGameWorldSimulation &World, CNetObj_PlayerInput Input, int CheckTicks) :
-				m_World(World), m_Input(Input), m_CheckTicks(CheckTicks)
+			CGreedyCandidateJob(const CGameWorldSimulation &World, CNetObj_PlayerInput Input,
+    int CheckTicks, bool AllowDirection, bool AllowHook) :
+    m_World(World),
+    m_Input(Input),
+    m_CheckTicks(CheckTicks),
+    m_AllowDirection(AllowDirection),
+    m_AllowHook(AllowHook)
 			{
 				Abortable(false);
 			}
