@@ -473,6 +473,8 @@ else if(LeftScore == RightScore && LeftScore < 1000)
 Settings.m_Direction = g_Config.m_ClBlackoutBlatantDirection != 0;
 Settings.m_Hook = g_Config.m_ClBlackoutBlatantHook != 0;
 Settings.m_Jump = g_Config.m_ClBlackoutBlatantJump != 0;
+Settings.m_HookPulse = g_Config.m_ClBlackoutBlatantHookPulse != 0;
+Settings.m_HookPulseTicks = g_Config.m_ClBlackoutBlatantHookPulseTicks;
 Planner.SetSettings(Settings);
 if(g_Config.m_ClBlackout &&
     g_Config.m_ClBlackoutBlatantAvoid &&
@@ -497,7 +499,7 @@ if(g_Config.m_ClBlackout &&
             vec2(OriginalInput.m_TargetX, OriginalInput.m_TargetY));
 
         if(Adjusted)
-            m_aInputData[g_Config.m_ClDummy] = *Adjusted;
+            m_aInputData[g_Config.m_ClDummy] = Planner.ApplyHookPulse(*Adjusted, OriginalInput.m_Hook != 0);
     }
         else
     {
