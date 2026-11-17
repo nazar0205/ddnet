@@ -21,6 +21,8 @@ namespace OpenKrx
 		bool m_Direction = true;
         bool m_Hook = true;
         bool m_Jump = true;
+        bool m_HookPulse = false;
+        int m_HookPulseTicks = 8;
         bool m_Death = false;
 		bool m_Teles = false;
 		bool m_Unfreeze = false;
@@ -98,6 +100,8 @@ bool m_SafetyHookSearch = true;
 		mutable std::optional<vec2> m_AssistPoint;
 		mutable std::optional<vec2> m_AutoAimPoint;
 		bool m_Dragged = false;
+		int m_HookPulseCounter = 0;
+		bool m_HookPulseRelease = false;
 		int m_LastDecisionLife = -1;
 		bool m_Tracing = false;
 		CBlatantDiagnostic m_Diagnostic;
@@ -126,6 +130,8 @@ bool m_SafetyHookSearch = true;
         m_Settings.m_Direction != Settings.m_Direction ||
         m_Settings.m_Hook != Settings.m_Hook ||
         m_Settings.m_Jump != Settings.m_Jump ||
+        m_Settings.m_HookPulse != Settings.m_HookPulse ||
+        m_Settings.m_HookPulseTicks != Settings.m_HookPulseTicks ||
         m_Settings.m_Death != Settings.m_Death ||
         m_Settings.m_Teles != Settings.m_Teles ||
         m_Settings.m_Unfreeze != Settings.m_Unfreeze ||
@@ -141,6 +147,8 @@ bool m_SafetyHookSearch = true;
         m_Settings.m_SafetyHookSearch != Settings.m_SafetyHookSearch)
     {
     m_vLastPlan.clear();
+    m_HookPulseCounter = 0;
+    m_HookPulseRelease = false;
 
     if(m_Settings.m_Hook && !Settings.m_Hook)
         m_Dragged = false;
@@ -151,6 +159,7 @@ bool m_SafetyHookSearch = true;
 		const CBlatantSettings &Settings() const { return m_Settings; }
 		void Reset();
 		void SynchronizeFireCounter(int Fire);
+		CNetObj_PlayerInput ApplyHookPulse(CNetObj_PlayerInput Input, bool HookHeld);
 		void SetTracing(bool Enabled) { m_Tracing = Enabled; }
 		const CBlatantDiagnostic &Diagnostic() const { return m_Diagnostic; }
 
