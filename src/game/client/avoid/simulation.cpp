@@ -214,6 +214,23 @@ int CGameWorldSimulation::HookState() const
 {
     return m_pLocal ? m_pLocal->Core()->m_HookState : HOOK_RETRACTED;
 }
+bool CGameWorldSimulation::PlayerHookingLocal() const
+{
+    if(!m_pLocal)
+        return false;
+
+    for(int Id : m_pLocal->Core()->m_AttachedPlayers)
+    {
+        CCharacter *pCharacter = m_World.GetCharacterById(Id);
+        if(!pCharacter || Id == m_LocalClientId)
+            continue;
+
+        if(pCharacter->Core()->HookedPlayer() == m_LocalClientId)
+            return true;
+    }
+
+    return false;
+}
 
 	bool CGameWorldSimulation::OnUnfreezeTile() const
 	{
