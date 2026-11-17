@@ -35,6 +35,7 @@ public:
     int HookState() const override;
     bool PlayerHookingLocal() const override;
     vec2 HookPullDirection() const override;
+    bool PredictPlayerThreat(const CNetObj_PlayerInput &Input, int CheckTicks, int Sensitivity, vec2 &Direction, int &TimeToFreeze) const override;
 	bool Dead() const override { return m_pLocal == nullptr; }
 	bool OnUnfreezeTile() const override;
 	vec2 Position() const override;
@@ -71,6 +72,7 @@ private:
 	bool m_LimitAutomaticFire = false;
 	bool m_AllowImmediateShot = false;
 	int m_AutomaticFireStep = 0;
+	mutable bool m_PlayerThreatDetected = false;
 };
 
 // Snapshot of the live game world for the given client id (main or dummy).
