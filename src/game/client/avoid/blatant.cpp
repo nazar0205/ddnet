@@ -509,8 +509,10 @@ else
 		// constant probe, but with Auto Drag disabled the greedy plan is discarded
 		// on success, so checking the probe first has the same result for a
 		// fraction of the cost.
+				const bool PlayerThreat = World.PlayerHookingLocal();
+
 		m_Diagnostic.m_ConstantLife = ConstantLife(World, Input, m_Settings.m_KickInTicks);
-		if(m_Diagnostic.m_ConstantLife == CBlatantPlan::SAFE)
+		if(m_Diagnostic.m_ConstantLife == CBlatantPlan::SAFE && !PlayerThreat)
 		{
 			m_Diagnostic.m_pReason = "constant_safe";
 			m_LastDecisionLife = CBlatantPlan::SAFE;
