@@ -533,7 +533,11 @@ if(CBlatantPlanner::ConstantLife(World, JumpInput, m_Settings.m_CheckTicks) == C
 
 		CBlatantPlan Best;
 		const auto vCandidates = Candidates(World, Input, MouseAim);
-		auto vResults = World.SearchCandidates(vCandidates, m_Settings.m_CheckTicks);
+		auto vResults = World.SearchCandidates(
+    vCandidates,
+    m_Settings.m_CheckTicks,
+    m_Settings.m_Direction,
+    m_Settings.m_Hook);
 		if(m_Tracing)
 		{
 			m_Diagnostic.m_vCandidates.reserve(vResults.size());
