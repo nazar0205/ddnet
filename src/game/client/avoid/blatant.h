@@ -103,9 +103,10 @@ bool m_SafetyHookSearch = true;
 		using CAction = std::array<int, 2>;
 		using CActionGroups = std::array<std::vector<CAction>, 3>;
 
-		static CNetObj_PlayerInput Action(const CNetObj_PlayerInput &Input, int Direction, int Hook);
+				static CNetObj_PlayerInput Action(const CNetObj_PlayerInput &Input, int Direction, int Hook);
+		static CActionGroups ActionGroups(int Direction, bool Hook);
+		static int ConstantLife(const IBlatantSimulation &World, const CNetObj_PlayerInput &Input, int CheckTicks);
 		static int SequenceLife(const IBlatantSimulation &World, const std::vector<CNetObj_PlayerInput> &vInputs);
-
 		void UpdateTracking(IBlatantSimulation &World, CNetObj_PlayerInput &Input, vec2 MouseAim);
 		std::vector<CNetObj_PlayerInput> AimCandidates(const IBlatantSimulation &World, const CNetObj_PlayerInput &Input, vec2 MouseAim) const;
 		std::vector<std::vector<CNetObj_PlayerInput>> CandidateGroups(const CNetObj_PlayerInput &Input) const;
