@@ -77,37 +77,80 @@ std::vector<CBlatantPlan> CGameWorldSimulation::SearchCandidates(
     int CheckTicks,
     bool AllowDirection,
     bool AllowHook) const
-	{
-		// Every job owns collision/tuning, including worlds that spawn lasers.
-		if(!m_pJobEngine || vInputs.size() < 2)
-			return IBlatantSimulation::SearchCandidates(
-    vInputs, CheckTicks, AllowDirection, AllowHook);
-		// 0x1402d30b0 waits for all independent greedy jobs, then selects by input
-		// index. Futures are stored in that order, never by completion time.
-		std::vector<std::future<CBlatantPlan>> vPending;
-		std::vector<std::shared_ptr<CGreedyCandidateJob>> vJobs;
-		vPending.reserve(vInputs.size());
-		vJobs.reserve(vInputs.size());
-		for(const auto &Input : vInputs)
-		{
-			auto pJob = std::make_shared<CGreedyCandidateJob>(
-    *this, Input, CheckTicks, AllowDirection, AllowHook);
-			vPending.push_back(pJob->Result());
-			vJobs.push_back(pJob);
-			m_pJobEngine->AddJob(std::move(pJob));
-		}
-		for(size_t Index = 0; Index < vPending.size(); ++Index)
-		{
-			if(vPending[Index].wait_for(std::chrono::seconds(0)) != std::future_status::ready)
-				vJobs[Index]->RunInline();
-			vPending[Index].wait();
-		}
-		std::vector<CBlatantPlan> vResults;
-		vResults.reserve(vPending.size());
-		for(auto &Pending : vPending)
-			vResults.push_back(Pending.get());
-		return vResults;
-	}
+{
+    // Search in one concrete world. Keep the existing job-pool optimization,
+    // and fall back to deterministic inline simulation when no pool is present.
+    const auto SearchWorld = [&](const CGameWorldSimulation &World) {
+        if(!World.m_pJobEngine || vInputs.size() < 2)
+        {
+            std::vector<CBlatantPlan> vInlineResults;
+            vInlineResults.reserve(vInputs.size());
+            for(const auto &Input : vInputs)
+                vInlineResults.push_back(CBlatantPlanner::Greedy(
+                    World, Input, CheckTicks, std::nullopt, true, AllowDirection, AllowHook));
+            return vInlineResults;
+        }
+
+        std::vector<std::future<CBlatantPlan>> vPending;
+        std::vector<std::shared_ptr<CGreedyCandidateJob>> vJobs;
+        vPending.reserve(vInputs.size());
+        vJobs.reserve(vInputs.size());
+        for(const auto &Input : vInputs)
+        {
+            auto pJob = std::make_shared<CGreedyCandidateJob>(
+                World, Input, CheckTicks, AllowDirection, AllowHook);
+            vPending.push_back(pJob->Result());
+            vJobs.push_back(pJob);
+            World.m_pJobEngine->AddJob(std::move(pJob));
+        }
+        for(size_t Index = 0; Index < vPending.size(); ++Index)
+        {
+            if(vPending[Index].wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+                vJobs[Index]->RunInline();
+            vPending[Index].wait();
+        }
+        std::vector<CBlatantPlan> vResults;
+        vResults.reserve(vPending.size());
+        for(auto &Pending : vPending)
+            vResults.push_back(Pending.get());
+        return vResults;
+    };
+
+    auto vResults = SearchWorld(*this);
+    if(!m_PlayerThreatDetected || vInputs.empty())
+        return vResults;
+
+    // For a detected player threat, search the same first actions in two
+    // opponent continuations: latest inputs and neutral movement/jump with
+    // hooks preserved. Rank each candidate by its worse predicted lifespan.
+    auto pNeutral = std::unique_ptr<CGameWorldSimulation>(
+        static_cast<CGameWorldSimulation *>(Clone().release()));
+    if(!pNeutral || !pNeutral->Valid())
+        return vResults;
+
+    for(int Id = 0; Id < MAX_CLIENTS; ++Id)
+    {
+        CCharacter *pCharacter = pNeutral->m_World.GetCharacterById(Id);
+        if(!pCharacter || Id == pNeutral->m_LocalClientId || pCharacter->m_IsLocal)
+            continue;
+        CNetObj_PlayerInput NeutralInput = pCharacter->GetCore().m_Input;
+        NeutralInput.m_Direction = 0;
+        NeutralInput.m_Jump = 0;
+        pCharacter->SetInput(&NeutralInput);
+    }
+
+    const auto vNeutralResults = SearchWorld(*pNeutral);
+    const size_t Count = std::min(vResults.size(), vNeutralResults.size());
+    for(size_t Index = 0; Index < Count; ++Index)
+    {
+        // Each search starts with the same candidate action. The stored result
+        // comes from the worse continuation, so the planner maximizes worst-case
+        // survival instead of trusting only one stale opponent input.
+        if(vNeutralResults[Index].m_Life < vResults[Index].m_Life)
+            vResults[Index] = vNeutralResults[Index];
+    }
+    return vResults;
+}
 
 	
 std::unique_ptr<IBlatantSimulation> CGameWorldSimulation::Clone() const
@@ -145,6 +188,7 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 	m_pJobEngine = nullptr;
 	m_LimitAutomaticFire = m_AllowImmediateShot = false;
 	m_AutomaticFireStep = 0;
+	m_PlayerThreatDetected = false;
 }
 
 	void CGameWorldSimulation::PreparePlayers(bool PredictPlayers, CGameClient *pGameClient)
@@ -254,6 +298,159 @@ vec2 CGameWorldSimulation::HookPullDirection() const
         return vec2(0.0f, 0.0f);
 
     return normalize(PullDirection);
+}
+
+bool CGameWorldSimulation::PredictPlayerThreat(const CNetObj_PlayerInput &Input, int CheckTicks, int Sensitivity, vec2 &Direction, int &TimeToFreeze) const
+{
+    Direction = vec2(0.0f, 0.0f);
+    TimeToFreeze = CBlatantPlan::SAFE;
+    m_PlayerThreatDetected = false;
+    if(!m_pLocal || Frozen() || CheckTicks < 1)
+        return false;
+
+    // Only pay for the counterfactual when another tee can plausibly interact
+    // with us: via an incoming hook or by entering the predicted hook/collision
+    // neighborhood. A hook merely being attached is not itself a threat.
+    bool HasNearbyPlayer = PlayerHookingLocal();
+    const float CollisionRadius = CCharacterCore::PhysicalSize() * 2.0f + 8.0f;
+    const float InfluenceRadius = HookLength() + 64.0f;
+    if(!HasNearbyPlayer)
+    {
+        for(int Id = 0; Id < MAX_CLIENTS; ++Id)
+        {
+            const CCharacter *pCharacter = m_World.GetCharacterById(Id);
+            if(!pCharacter || Id == m_LocalClientId || pCharacter->m_IsLocal)
+                continue;
+            const float Distance = distance(m_pLocal->m_Pos, pCharacter->m_Pos);
+            const bool CanCollideSoon = Distance <= CollisionRadius;
+            const bool HookFlyingAtUs = Distance <= InfluenceRadius &&
+                pCharacter->Core()->m_HookState == HOOK_FLYING &&
+                dot(normalize(m_pLocal->m_Pos - pCharacter->m_Pos), normalize(pCharacter->Core()->m_HookDir)) > 0.65f;
+            if(CanCollideSoon || HookFlyingAtUs)
+            {
+                HasNearbyPlayer = true;
+                break;
+            }
+        }
+    }
+    if(!HasNearbyPlayer)
+        return false;
+
+    auto CloneWorld = [&]() {
+        return std::unique_ptr<CGameWorldSimulation>(
+            static_cast<CGameWorldSimulation *>(Clone().release()));
+    };
+    auto pCurrent = CloneWorld();
+    auto pNeutral = CloneWorld();
+    auto pWithoutPlayers = CloneWorld();
+    if(!pCurrent || !pNeutral || !pWithoutPlayers ||
+        !pCurrent->Valid() || !pNeutral->Valid() || !pWithoutPlayers->Valid())
+        return false;
+
+    // Scenario A keeps each opponent's latest predicted input.
+    // Scenario B assumes opponents release movement/jump but keep any active
+    // hook. These two plausible continuations avoid relying on one stale input.
+    for(int Id = 0; Id < MAX_CLIENTS; ++Id)
+    {
+        CCharacter *pCharacter = pNeutral->m_World.GetCharacterById(Id);
+        if(!pCharacter || Id == pNeutral->m_LocalClientId || pCharacter->m_IsLocal)
+            continue;
+        CNetObj_PlayerInput NeutralInput = pCharacter->GetCore().m_Input;
+        NeutralInput.m_Direction = 0;
+        NeutralInput.m_Jump = 0;
+        pCharacter->SetInput(&NeutralInput);
+    }
+
+    // Counterfactual: keep the local tee and map physics identical, but remove
+    // every other tee. The difference includes incoming hook forces and player
+    // collision/push impulses, while excluding freezes caused by the map alone.
+    for(int Id = 0; Id < MAX_CLIENTS; ++Id)
+    {
+        CCharacter *pCharacter = pWithoutPlayers->m_World.GetCharacterById(Id);
+        if(!pCharacter || Id == pWithoutPlayers->m_LocalClientId || pCharacter->m_IsLocal)
+            continue;
+        delete pCharacter;
+    }
+
+    int CurrentLife = CBlatantPlan::SAFE;
+    int NeutralLife = CBlatantPlan::SAFE;
+    int WithoutPlayersLife = CBlatantPlan::SAFE;
+    vec2 CurrentDisplacement(0.0f, 0.0f);
+    vec2 NeutralDisplacement(0.0f, 0.0f);
+    float CurrentDisplacementLength = 0.0f;
+    float NeutralDisplacementLength = 0.0f;
+
+    for(int Tick = 0; Tick <= CheckTicks; ++Tick)
+    {
+        if(CurrentLife == CBlatantPlan::SAFE)
+        {
+            pCurrent->Tick(Input);
+            if(pCurrent->Frozen())
+                CurrentLife = Tick;
+        }
+        if(NeutralLife == CBlatantPlan::SAFE)
+        {
+            pNeutral->Tick(Input);
+            if(pNeutral->Frozen())
+                NeutralLife = Tick;
+        }
+        if(WithoutPlayersLife == CBlatantPlan::SAFE)
+        {
+            pWithoutPlayers->Tick(Input);
+            if(pWithoutPlayers->Frozen())
+                WithoutPlayersLife = Tick;
+        }
+
+        if((CurrentLife == CBlatantPlan::SAFE || CurrentLife == Tick) &&
+            pCurrent->Valid() && pWithoutPlayers->Valid())
+        {
+            const vec2 Displacement = pCurrent->Position() - pWithoutPlayers->Position();
+            const float DisplacementLength = length(Displacement);
+            if(DisplacementLength > CurrentDisplacementLength)
+            {
+                CurrentDisplacement = Displacement;
+                CurrentDisplacementLength = DisplacementLength;
+            }
+        }
+        if((NeutralLife == CBlatantPlan::SAFE || NeutralLife == Tick) &&
+            pNeutral->Valid() && pWithoutPlayers->Valid())
+        {
+            const vec2 Displacement = pNeutral->Position() - pWithoutPlayers->Position();
+            const float DisplacementLength = length(Displacement);
+            if(DisplacementLength > NeutralDisplacementLength)
+            {
+                NeutralDisplacement = Displacement;
+                NeutralDisplacementLength = DisplacementLength;
+            }
+        }
+
+        if(CurrentLife != CBlatantPlan::SAFE && NeutralLife != CBlatantPlan::SAFE &&
+            WithoutPlayersLife != CBlatantPlan::SAFE)
+            break;
+    }
+
+    // Evaluate the more dangerous of the two opponent continuations.
+    const bool NeutralIsWorse = NeutralLife < CurrentLife ||
+        (NeutralLife == CurrentLife && NeutralDisplacementLength > CurrentDisplacementLength);
+    const int WithPlayersLife = NeutralIsWorse ? NeutralLife : CurrentLife;
+    const vec2 PlayerDisplacement = NeutralIsWorse ? NeutralDisplacement : CurrentDisplacement;
+    const float PlayerDisplacementLength = NeutralIsWorse ? NeutralDisplacementLength : CurrentDisplacementLength;
+
+    // Trigger only when other players make an otherwise safer trajectory freeze
+    // sooner. A harmless hook, or an unavoidable map-only freeze, is not a
+    // Player Threat and must not take control away from the user.
+    const int RequiredLead = 1 + (10 - std::clamp(Sensitivity, 1, 10)) / 3;
+    if(WithPlayersLife == CBlatantPlan::SAFE ||
+        (WithoutPlayersLife != CBlatantPlan::SAFE && WithoutPlayersLife - WithPlayersLife < RequiredLead))
+        return false;
+
+    TimeToFreeze = WithPlayersLife;
+    if(PlayerDisplacementLength > 0.01f)
+        Direction = normalize(PlayerDisplacement);
+    else
+        Direction = HookPullDirection();
+    m_PlayerThreatDetected = true;
+    return true;
 }
 
 	bool CGameWorldSimulation::OnUnfreezeTile() const
