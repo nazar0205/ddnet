@@ -239,16 +239,21 @@ namespace OpenKrx
 			}
 			if(!Aim)
 				continue;
-			for(const int Direction : {-1, 0, 1})
-			{
-				if(MayElide && OutputsFixed())
-					break;
-				CNetObj_PlayerInput Candidate = Input;
-				Candidate.m_Direction = Direction;
-				Candidate.m_TargetX = static_cast<int>(Hit.x);
-				Candidate.m_TargetY = static_cast<int>(Hit.y);
-				Candidate.m_Hook = Input.m_Hook == 1 ? 0 : 1;
-				const float Dot = dot(normalize(Hit), Mouse);
+for(const int Direction : {-1, 0, 1})
+{
+    if(MayElide && OutputsFixed())
+        break;
+
+    if(!m_Settings.m_Direction && Direction != Input.m_Direction)
+        continue;
+
+    CNetObj_PlayerInput Candidate = Input;
+    Candidate.m_Direction = Direction;
+    Candidate.m_TargetX = static_cast<int>(Hit.x);
+    Candidate.m_TargetY = static_cast<int>(Hit.y);
+    Candidate.m_Hook = Input.m_Hook == 1 ? 0 : 1;
+
+    const float Dot = dot(normalize(Hit), Mouse);
 				// Once Auto is SAFE, a rejected Assist dot cannot improve either
 				// candidate or either cached ESP point. Both points are observable
 				// in new KRX even when their input-output toggles are disabled.
