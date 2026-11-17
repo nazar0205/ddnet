@@ -46,7 +46,6 @@ namespace OpenKrx
 
     return vResults;
 }
-	}
 
 	CBlatantPlanner::CActionGroups CBlatantPlanner::ActionGroups(int Direction, bool Hook)
 	{
