@@ -221,7 +221,7 @@ bool CGameWorldSimulation::PlayerHookingLocal() const
 
     for(int Id : m_pLocal->Core()->m_AttachedPlayers)
     {
-        CCharacter *pCharacter = m_World.GetCharacterById(Id);
+        const CCharacter *pCharacter = m_World.GetCharacterById(Id);
         if(!pCharacter || Id == m_LocalClientId)
             continue;
 
@@ -240,7 +240,7 @@ vec2 CGameWorldSimulation::HookPullDirection() const
 
     for(int Id : m_pLocal->Core()->m_AttachedPlayers)
     {
-        CCharacter *pCharacter = m_World.GetCharacterById(Id);
+        const CCharacter *pCharacter = m_World.GetCharacterById(Id);
         if(!pCharacter || Id == m_LocalClientId)
             continue;
 
