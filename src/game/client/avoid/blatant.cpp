@@ -492,10 +492,12 @@ else
 			return std::nullopt;
 		}
 		if(!m_Settings.m_AutoDrag && m_Dragged)
-		{
-			Input.m_Hook = 0;
-			m_Dragged = false;
-		}
+{
+    if(m_Settings.m_Hook)
+        Input.m_Hook = 0;
+
+    m_Dragged = false;
+}
 
 		// 0x1402d2080 order: tracking, then the guard (Kick In Ticks), then the
 		// unfreeze branch, then the search and finally NSIF. There is no plan
