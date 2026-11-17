@@ -163,8 +163,8 @@ std::unique_ptr<CGameWorldSimulation> CGameWorldSimulation::CloneForJob() const
 			auto *pCharacter = m_World.GetCharacterById(Id);
 			if(!pCharacter || Id == m_LocalClientId || pCharacter->m_IsLocal)
 				continue;
-			if(!PredictPlayers || distance(m_pLocal->m_Pos, pCharacter->m_Pos) > Radius ||
-				(pGameClient && ((!pGameClient->m_Snap.m_aCharacters[Id].m_Active && pCharacter->m_SnapTicks > 10) || pGameClient->IsOtherTeam(Id))))
+	if(!PredictPlayers || distance(m_pLocal->m_Pos, pCharacter->m_Pos) > Radius ||
+    (pGameClient && !pGameClient->m_Snap.m_aCharacters[Id].m_Active && pCharacter->m_SnapTicks > 10))
 				delete pCharacter;
 		}
 	}
