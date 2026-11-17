@@ -22,6 +22,8 @@ MACRO_CONFIG_INT(ClBlackoutBlatantAvoid, cl_blackout_blatant_avoid, 0, 0, 1, CFG
 MACRO_CONFIG_INT(ClBlackoutBlatantDirection, cl_blackout_blatant_direction, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Allow Blatant Avoid to change movement direction")
 MACRO_CONFIG_INT(ClBlackoutBlatantHook, cl_blackout_blatant_hook, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Allow Blatant Avoid to change hook input")
 MACRO_CONFIG_INT(ClBlackoutBlatantJump, cl_blackout_blatant_jump, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Allow Blatant Avoid to use emergency jump")
+MACRO_CONFIG_INT(ClBlackoutBlatantHookPulse, cl_blackout_blatant_hook_pulse, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Pulse the hook while it is held")
+MACRO_CONFIG_INT(ClBlackoutBlatantHookPulseTicks, cl_blackout_blatant_hook_pulse_ticks, 8, 2, 60, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Number of hook ticks between pulse releases")
 MACRO_CONFIG_INT(ClPredict, cl_predict, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict client movements")
 MACRO_CONFIG_INT(ClPredictDummy, cl_predict_dummy, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict dummy movements")
 MACRO_CONFIG_INT(ClPredictEvents, cl_predict_events, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict events (sounds, particles)")
