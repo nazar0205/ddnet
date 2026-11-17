@@ -135,9 +135,11 @@ bool m_SafetyHookSearch = true;
         m_Settings.m_AutoDrag != Settings.m_AutoDrag ||
         m_Settings.m_SafetyHookSearch != Settings.m_SafetyHookSearch)
     {
-        m_vLastPlan.clear();
+    m_vLastPlan.clear();
+
+    if(m_Settings.m_Hook && !Settings.m_Hook)
         m_Dragged = false;
-    }
+	}
 
     m_Settings = Settings;
 }
