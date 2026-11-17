@@ -54,7 +54,9 @@ namespace OpenKrx
 				if(m_Claimed.exchange(true, std::memory_order_acq_rel))
 					return;
 				auto pPrivateWorld = m_World.CloneForJob();
-				m_Result.set_value(CBlatantPlanner::Greedy(*pPrivateWorld, m_Input, m_CheckTicks));
+				m_Result.set_value(CBlatantPlanner::Greedy(
+    *pPrivateWorld, m_Input, m_CheckTicks, std::nullopt, true,
+    m_AllowDirection, m_AllowHook));
 			}
 		};
 	}
@@ -70,12 +72,16 @@ namespace OpenKrx
 		return !m_World.m_pParent && !m_World.m_pChild && !m_World.m_Core.m_pPrng;
 	}
 
-	std::vector<CBlatantPlan> CGameWorldSimulation::SearchCandidates(const std::vector<CNetObj_PlayerInput> &vInputs, int CheckTicks) const
+std::vector<CBlatantPlan> CGameWorldSimulation::SearchCandidates(
+    const std::vector<CNetObj_PlayerInput> &vInputs,
+    int CheckTicks,
+    bool AllowDirection,
+    bool AllowHook) const
 	{
 		// Every job owns collision/tuning, including worlds that spawn lasers.
 		if(!m_pJobEngine || vInputs.size() < 2)
-			return IBlatantSimulation::SearchCandidates(vInputs, CheckTicks);
-
+			return IBlatantSimulation::SearchCandidates(
+    vInputs, CheckTicks, AllowDirection, AllowHook);
 		// 0x1402d30b0 waits for all independent greedy jobs, then selects by input
 		// index. Futures are stored in that order, never by completion time.
 		std::vector<std::future<CBlatantPlan>> vPending;
@@ -84,7 +90,8 @@ namespace OpenKrx
 		vJobs.reserve(vInputs.size());
 		for(const auto &Input : vInputs)
 		{
-			auto pJob = std::make_shared<CGreedyCandidateJob>(*this, Input, CheckTicks);
+			auto pJob = std::make_shared<CGreedyCandidateJob>(
+    *this, Input, CheckTicks, AllowDirection, AllowHook);
 			vPending.push_back(pJob->Result());
 			vJobs.push_back(pJob);
 			m_pJobEngine->AddJob(std::move(pJob));
