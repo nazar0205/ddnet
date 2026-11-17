@@ -22,7 +22,11 @@ public:
 	CGameWorldSimulation() = default;
 
 	std::unique_ptr<IBlatantSimulation> Clone() const override;
-	std::vector<CBlatantPlan> SearchCandidates(const std::vector<CNetObj_PlayerInput> &vInputs, int CheckTicks) const override;
+	std::vector<CBlatantPlan> SearchCandidates(
+    const std::vector<CNetObj_PlayerInput> &vInputs,
+    int CheckTicks,
+    bool AllowDirection = true,
+    bool AllowHook = true) const override;
 	bool CanElideIndependentProbes() const override;
 	bool Valid() const override { return m_pLocal != nullptr; }
 	void Tick(const CNetObj_PlayerInput &Input) override;
