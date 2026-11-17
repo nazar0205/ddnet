@@ -493,12 +493,16 @@ if(g_Config.m_ClBlackout &&
         if(Adjusted)
             m_aInputData[g_Config.m_ClDummy] = *Adjusted;
     }
-    else
+        else
     {
         Planner.Reset();
-	}
-	}
-		// check if we need to send input
+    }
+}
+else
+{
+    Planner.Reset();
+}
+        // check if we need to send input
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Direction != m_aLastData[g_Config.m_ClDummy].m_Direction;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Jump != m_aLastData[g_Config.m_ClDummy].m_Jump;
 		Send = Send || m_aInputData[g_Config.m_ClDummy].m_Fire != m_aLastData[g_Config.m_ClDummy].m_Fire;
