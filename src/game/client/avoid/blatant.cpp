@@ -530,7 +530,7 @@ else
     m_Settings.m_Direction,
     m_Settings.m_Hook);
 		m_Diagnostic.m_GreedyLife = Guard.m_Life;
-		if(Guard.m_Life == CBlatantPlan::SAFE)
+				if(Guard.m_Life == CBlatantPlan::SAFE && !PlayerThreat)
 		{
 			m_LastDecisionLife = CBlatantPlan::SAFE;
 			m_Diagnostic.m_pReason = "greedy_safe";
