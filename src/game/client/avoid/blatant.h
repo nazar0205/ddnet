@@ -122,6 +122,7 @@ bool m_SafetyHookSearch = true;
         m_Settings.m_PlayerPrediction != Settings.m_PlayerPrediction ||
         m_Settings.m_Direction != Settings.m_Direction ||
         m_Settings.m_Hook != Settings.m_Hook ||
+        m_Settings.m_Jump != Settings.m_Jump ||
         m_Settings.m_Death != Settings.m_Death ||
         m_Settings.m_Teles != Settings.m_Teles ||
         m_Settings.m_Unfreeze != Settings.m_Unfreeze ||
