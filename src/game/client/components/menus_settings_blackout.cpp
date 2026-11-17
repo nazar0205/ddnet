@@ -27,10 +27,21 @@ void CMenus::RenderSettingsBlackout(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBalanceBot, Localize("Balance Bot"), g_Config.m_ClBlackoutBalanceBot, &Row))
 		g_Config.m_ClBlackoutBalanceBot ^= 1;
 
+		MainView.HSplitTop(30.0f, &Row, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantAvoid, Localize("Blatant Avoid"), g_Config.m_ClBlackoutBlatantAvoid, &Row))
+		g_Config.m_ClBlackoutBlatantAvoid ^= 1;
+
+	MainView.HSplitTop(8.0f, nullptr, &MainView);
+
 	MainView.HSplitTop(30.0f, &Row, &MainView);
-	if(DoButton_CheckBox(&g_Config.m_ClBlackoutFrostAvoid, Localize("Frost Avoid"), g_Config.m_ClBlackoutFrostAvoid, &Row))
-		g_Config.m_ClBlackoutFrostAvoid ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantDirection, Localize("Blatant Direction"), g_Config.m_ClBlackoutBlatantDirection, &Row))
+		g_Config.m_ClBlackoutBlatantDirection ^= 1;
+
 	MainView.HSplitTop(30.0f, &Row, &MainView);
-if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantAvoid, Localize("Blatant Avoid"), g_Config.m_ClBlackoutBlatantAvoid, &Row))
-    g_Config.m_ClBlackoutBlatantAvoid ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantHook, Localize("Blatant Hook"), g_Config.m_ClBlackoutBlatantHook, &Row))
+		g_Config.m_ClBlackoutBlatantHook ^= 1;
+
+	MainView.HSplitTop(30.0f, &Row, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantJump, Localize("Emergency Jump"), g_Config.m_ClBlackoutBlatantJump, &Row))
+		g_Config.m_ClBlackoutBlatantJump ^= 1;
 }
