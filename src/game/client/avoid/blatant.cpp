@@ -353,10 +353,16 @@ else
 	{
 		std::vector<std::vector<CNetObj_PlayerInput>> vGroups;
 		for(const auto &Group : ActionGroups(Input.m_Direction, Input.m_Hook != 0))
-		{
-			std::vector<CNetObj_PlayerInput> vGroup;
-			for(const auto &Next : Group)
-				vGroup.push_back(Action(Input, Next[0], Next[1]));
+{
+    std::vector<CNetObj_PlayerInput> vGroup;
+    for(const auto &Next : Group)
+    {
+        if((!m_Settings.m_Direction && Next[0] != Input.m_Direction) ||
+            (!m_Settings.m_Hook && Next[1] != Input.m_Hook))
+            continue;
+
+        vGroup.push_back(Action(Input, Next[0], Next[1]));
+	}
 			if(!vGroup.empty())
 				vGroups.push_back(std::move(vGroup));
 		}
