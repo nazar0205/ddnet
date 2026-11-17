@@ -198,8 +198,8 @@ namespace OpenKrx
 		const bool MayElide = World.CanElideIndependentProbes();
 		CNetObj_PlayerInput BestAssist = Input;
 		CNetObj_PlayerInput BestAuto = Input;
-		BestAssist.m_Hook = 1;
-		BestAuto.m_Hook = 1;
+        BestAssist.m_Hook = m_Settings.m_Hook ? 1 : Input.m_Hook;
+        BestAuto.m_Hook = m_Settings.m_Hook ? 1 : Input.m_Hook;
 		int AssistLife = 0;
 		int AutoLife = 0;
 		const auto OutputsFixed = [&] {
@@ -251,7 +251,7 @@ for(const int Direction : {-1, 0, 1})
     Candidate.m_Direction = Direction;
     Candidate.m_TargetX = static_cast<int>(Hit.x);
     Candidate.m_TargetY = static_cast<int>(Hit.y);
-    Candidate.m_Hook = Input.m_Hook == 1 ? 0 : 1;
+    Candidate.m_Hook = m_Settings.m_Hook ? (Input.m_Hook == 1 ? 0 : 1) : Input.m_Hook;
 
     const float Dot = dot(normalize(Hit), Mouse);
 				// Once Auto is SAFE, a rejected Assist dot cannot improve either
@@ -262,7 +262,7 @@ for(const int Direction : {-1, 0, 1})
 					continue;
 			// Re-hook sequence: release, hook the selected anchor, then predict survival.
 int Life;
-if(Input.m_Hook == 1)
+if(Input.m_Hook == 1 && m_Settings.m_Hook)
 {
     auto pRehookWorld = World.Clone();
 
