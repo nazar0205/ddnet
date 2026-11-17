@@ -469,6 +469,10 @@ else if(LeftScore == RightScore && LeftScore < 1000)
 
 // Blackout Blatant Avoid
 		static OpenKrx::CBlatantPlanner Planner;
+		OpenKrx::CBlatantSettings Settings = Planner.Settings();
+Settings.m_Direction = g_Config.m_ClBlackoutBlatantDirection != 0;
+Settings.m_Hook = g_Config.m_ClBlackoutBlatantHook != 0;
+Planner.SetSettings(Settings);
 if(g_Config.m_ClBlackout &&
     g_Config.m_ClBlackoutBlatantAvoid &&
     Client()->State() == IClient::STATE_ONLINE &&
