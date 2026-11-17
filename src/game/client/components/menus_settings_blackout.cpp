@@ -44,4 +44,11 @@ void CMenus::RenderSettingsBlackout(CUIRect MainView)
 	MainView.HSplitTop(30.0f, &Row, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantJump, Localize("Emergency Jump"), g_Config.m_ClBlackoutBlatantJump, &Row))
 		g_Config.m_ClBlackoutBlatantJump ^= 1;
+
+	MainView.HSplitTop(30.0f, &Row, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClBlackoutBlatantHookPulse, Localize("Hook Pulse"), g_Config.m_ClBlackoutBlatantHookPulse, &Row))
+		g_Config.m_ClBlackoutBlatantHookPulse ^= 1;
+
+	MainView.HSplitTop(30.0f, &Row, &MainView);
+	Ui()->DoScrollbarOption(&g_Config.m_ClBlackoutBlatantHookPulseTicks, &g_Config.m_ClBlackoutBlatantHookPulseTicks, &Row, Localize("Hook Pulse Interval"), 2, 60);
 }
