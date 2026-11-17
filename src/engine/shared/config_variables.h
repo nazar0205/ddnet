@@ -24,6 +24,8 @@ MACRO_CONFIG_INT(ClBlackoutBlatantHook, cl_blackout_blatant_hook, 1, 0, 1, CFGFL
 MACRO_CONFIG_INT(ClBlackoutBlatantJump, cl_blackout_blatant_jump, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Allow Blatant Avoid to use emergency jump")
 MACRO_CONFIG_INT(ClBlackoutBlatantHookPulse, cl_blackout_blatant_hook_pulse, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Pulse the hook while it is held")
 MACRO_CONFIG_INT(ClBlackoutBlatantHookPulseTicks, cl_blackout_blatant_hook_pulse_ticks, 8, 2, 60, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Number of hook ticks between pulse releases")
+MACRO_CONFIG_INT(ClBlackoutBlatantThreatSensitivity, cl_blackout_blatant_threat_sensitivity, 7, 1, 10, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Sensitivity for player-caused freeze threat detection")
+MACRO_CONFIG_INT(ClBlackoutBlatantPlayerPrediction, cl_blackout_blatant_player_prediction, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict other players for Blatant Avoid")
 MACRO_CONFIG_INT(ClPredict, cl_predict, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict client movements")
 MACRO_CONFIG_INT(ClPredictDummy, cl_predict_dummy, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict dummy movements")
 MACRO_CONFIG_INT(ClPredictEvents, cl_predict_events, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Predict events (sounds, particles)")
