@@ -30,13 +30,22 @@ namespace OpenKrx
 		return Result;
 	}
 
-	std::vector<CBlatantPlan> IBlatantSimulation::SearchCandidates(const std::vector<CNetObj_PlayerInput> &vInputs, int CheckTicks) const
-	{
-		std::vector<CBlatantPlan> vResults;
-		vResults.reserve(vInputs.size());
-		for(const auto &Input : vInputs)
-			vResults.push_back(CBlatantPlanner::Greedy(*this, Input, CheckTicks));
-		return vResults;
+	std::vector<CBlatantPlan> IBlatantSimulation::SearchCandidates(
+    const std::vector<CNetObj_PlayerInput> &vInputs,
+    int CheckTicks,
+    bool AllowDirection,
+    bool AllowHook) const
+{
+    std::vector<CBlatantPlan> vResults;
+    vResults.reserve(vInputs.size());
+
+    for(const auto &Input : vInputs)
+        vResults.push_back(CBlatantPlanner::Greedy(
+            *this, Input, CheckTicks, std::nullopt, true,
+            AllowDirection, AllowHook));
+
+    return vResults;
+}
 	}
 
 	CBlatantPlanner::CActionGroups CBlatantPlanner::ActionGroups(int Direction, bool Hook)
@@ -115,7 +124,8 @@ namespace OpenKrx
 	}
 
 	CBlatantPlan CBlatantPlanner::Greedy(const IBlatantSimulation &World, CNetObj_PlayerInput Input,
-		int CheckTicks, std::optional<vec2> Anchor, bool TrackFromFirstTick)
+    int CheckTicks, std::optional<vec2> Anchor, bool TrackFromFirstTick,
+    bool AllowDirection, bool AllowHook)
 	{
 		auto pCopy = World.Clone();
 		CBlatantPlan Result;
