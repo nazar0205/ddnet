@@ -144,8 +144,12 @@ namespace OpenKrx
 				int BestLife = -1;
 				CNetObj_PlayerInput BestInput{};
 				for(const auto &Next : ACTIONS)
-				{
-					const auto Candidate = Action(Input, Next[0], Next[1]);
+{
+    if((!AllowDirection && Next[0] != Input.m_Direction) ||
+        (!AllowHook && Next[1] != Input.m_Hook))
+        continue;
+
+    const auto Candidate = Action(Input, Next[0], Next[1]);
 					const int Life = ConstantLife(*pCopy, Candidate, Remaining);
 					if(Life > BestLife)
 					{
